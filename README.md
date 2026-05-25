@@ -10,6 +10,10 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status)
 [![CI](https://github.com/james-kanghj/frameboard/actions/workflows/ci.yml/badge.svg)](https://github.com/james-kanghj/frameboard/actions/workflows/ci.yml)
+[![GitHub stars](https://img.shields.io/github/stars/james-kanghj/frameboard?style=flat&logo=github)](https://github.com/james-kanghj/frameboard/stargazers)
+[![Last commit](https://img.shields.io/github/last-commit/james-kanghj/frameboard)](https://github.com/james-kanghj/frameboard/commits/main)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Built with Claude Code](https://img.shields.io/badge/built%20with-Claude%20Code-D97757)](https://claude.com/claude-code)
 
 </div>
