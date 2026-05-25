@@ -1,5 +1,5 @@
 # /apps/api/app/crud/__init__.py
 
-from app.crud import backlog_item, rice_score, workspace
+from app.crud import backlog_item, item_history, rice_score, workspace
 
-__all__ = ["backlog_item", "rice_score", "workspace"]
+__all__ = ["backlog_item", "item_history", "rice_score", "workspace"]

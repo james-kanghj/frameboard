@@ -7,6 +7,7 @@ from uuid import UUID
 from sqlalchemy import func, nulls_last, select, update
 from sqlalchemy.orm import Session, selectinload
 
+from app.crud import item_history as history_crud
 from app.models.backlog_item import BacklogItem
 from app.models.rice_score import RICEScore
 
@@ -38,6 +39,21 @@ def upsert_rice_score(
     existing = db.execute(
         select(RICEScore).where(RICEScore.item_id == item_id)
     ).scalar_one_or_none()
+    # Snapshot the pre-write state for the history row. We pass the
+    # full ORM object — record_score_change skips writing if nothing
+    # actually changed (e.g. PATCH re-saving identical numbers).
+    history_crud.record_score_change(
+        db,
+        item_id=item_id,
+        before=existing,
+        after_values={
+            "reach": reach,
+            "impact": impact,
+            "confidence": confidence,
+            "effort": effort,
+            "score": score_value,
+        },
+    )
     if existing is None:
         rice = RICEScore(
             item_id=item_id,
@@ -68,6 +84,10 @@ def delete_rice_score(db: Session, item_id: UUID) -> None:
     ).scalar_one_or_none()
     if existing is None:
         return
+    # Record the clear before the actual delete so we capture the old values.
+    history_crud.record_score_change(
+        db, item_id=item_id, before=existing, after_values=None
+    )
     db.delete(existing)
     _touch_item(db, item_id)
     db.commit()

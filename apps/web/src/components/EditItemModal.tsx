@@ -6,6 +6,7 @@ import type { BacklogItem, RICEImpact } from "@frameboard/shared";
 
 import { ApiError, scoreRICE, updateItem } from "@/lib/api";
 import { ImpactSelect } from "@/components/ImpactSelect";
+import { ItemHistory } from "@/components/ItemHistory";
 
 const MAX_TAGS_PER_ITEM = 10;
 const MAX_TAG_LENGTH = 30;
@@ -313,6 +314,8 @@ export function EditItemModal({ item, onClose, onSaved, onError }: Props) {
               or clear them all to save only Title/Description changes.
             </p>
           )}
+
+          <ItemHistory itemId={item.id} />
 
           <div className="flex justify-end gap-2 pt-2">
             <button

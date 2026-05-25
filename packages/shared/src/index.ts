@@ -79,3 +79,17 @@ export interface ScoreResult {
   score: number;
   breakdown: Record<string, number>;
 }
+
+// Mirrors backend ItemHistoryEntry. Append-only timeline of changes for
+// a single backlog item. `kind = "score"` rows carry RICE numbers in
+// before/after; `kind = "fields"` rows carry only the changed item
+// fields (title/description/tags). `before === null` means first ever
+// scoring; `after === null` means the score was cleared.
+export interface ItemHistoryEntry {
+  id: string;
+  itemId: string;
+  changedAt: string;
+  kind: "score" | "fields";
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
+}

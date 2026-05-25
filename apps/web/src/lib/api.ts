@@ -4,6 +4,7 @@ import type {
   BacklogItem,
   CreateItemInput,
   CreateWorkspaceInput,
+  ItemHistoryEntry,
   ScoreRICEInput,
   ScoreResult,
   UpdateItemInput,
@@ -165,6 +166,10 @@ export function updateItem(
 
 export function deleteItem(itemId: string): Promise<void> {
   return request<void>(`/v1/items/${itemId}`, { method: "DELETE" });
+}
+
+export function fetchItemHistory(itemId: string): Promise<ItemHistoryEntry[]> {
+  return request<ItemHistoryEntry[]>(`/v1/items/${itemId}/history`);
 }
 
 // ---------- RICE scoring ----------

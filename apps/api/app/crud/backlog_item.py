@@ -8,6 +8,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from app.crud import item_history as history_crud
 from app.models.backlog_item import BacklogItem
 
 
@@ -64,11 +65,27 @@ def update_item(db: Session, *, item_id: UUID, **fields: Any) -> BacklogItem | N
         return None
     if "tags" in fields and fields["tags"] is None:
         del fields["tags"]
+    # Snapshot only the keys the caller is touching, so the history diff
+    # records the smallest meaningful delta. Lists (tags) are copied so a
+    # later in-place mutation doesn't poison the before-image.
+    before = {k: _snapshot(getattr(item, k)) for k in fields}
     for key, value in fields.items():
         setattr(item, key, value)
+    after = {k: _snapshot(getattr(item, k)) for k in fields}
+    history_crud.record_fields_change(
+        db, item_id=item_id, before=before, after=after
+    )
     db.commit()
     db.refresh(item)
     return item
+
+
+def _snapshot(value: Any) -> Any:
+    """Shallow copy lists (tags) so the before-image stays stable after
+    the setattr loop. Scalars pass through unchanged."""
+    if isinstance(value, list):
+        return list(value)
+    return value
 
 
 def delete_item(db: Session, item_id: UUID) -> bool:
