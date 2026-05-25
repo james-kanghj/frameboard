@@ -41,6 +41,15 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
+# B008: FastAPI's documented dependency-injection pattern requires
+# `Depends(...)` in argument defaults. Flagging it would force every
+# route to be rewritten away from the framework's idiom.
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# SQLAlchemy convention names a sessionmaker `SessionLocal` (PascalCase)
+# even when assigned inside a function. Only allow it in tests.
+"tests/**/*.py" = ["N806"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

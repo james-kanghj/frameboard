@@ -6,19 +6,19 @@ import sys
 from logging.config import fileConfig
 from pathlib import Path
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 # Ensure `app` is importable when alembic is invoked from apps/api/.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from app.core.config import settings  # noqa: E402
-from app.db.session import Base  # noqa: E402
 
 # Importing the models package registers every model on Base.metadata so
 # `alembic revision --autogenerate` can detect schema changes. The F401
 # silence is intentional — the import is the side effect.
 from app import models  # noqa: E402, F401
+from app.core.config import settings  # noqa: E402
+from app.db.session import Base  # noqa: E402
 
 config = context.config
 
