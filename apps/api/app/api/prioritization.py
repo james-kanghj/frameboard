@@ -210,7 +210,10 @@ def delete_item_rice(
 def delete_item_polymorphic_score(
     item_id: UUID,
     current_user: CurrentUser,
-    framework: str = Query(..., description="Framework to clear: ICE | MoSCoW | ValueEffort | RICE"),
+    framework: str = Query(
+        ...,
+        description="Framework to clear: ICE | MoSCoW | ValueEffort | RICE",
+    ),
     db: Session = Depends(get_db),
 ) -> None:
     if framework not in SUPPORTED_FRAMEWORKS:
