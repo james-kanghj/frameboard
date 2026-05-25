@@ -32,7 +32,7 @@ The board at a glance — filter bar, top-10 bar chart, and the table:
     <td><a href="./docs/screenshots/03-workspaces-list.png"><img src="./docs/screenshots/03-workspaces-list.png" alt="Workspaces list"></a></td>
   </tr>
   <tr>
-    <td width="50%"><strong>Effort / Score bucket chips</strong><br><sub>Quick (≤3) + High (&gt;1000) narrows 25 items to the one standout</sub></td>
+    <td width="50%"><strong>Effort + Tag chip filters</strong><br><sub>Quick (≤3) effort + <code>feature</code> tag narrows 25 items to a focused slice — Score bucket sits alongside, ready to layer on</sub></td>
     <td width="50%"><strong>Inline (i) tooltips on every metric</strong><br><sub>Hover, focus, or tap for the RICE-specific scale (0.25 → 3 etc.)</sub></td>
   </tr>
   <tr>
@@ -47,7 +47,7 @@ The board at a glance — filter bar, top-10 bar chart, and the table:
   </tr>
 </table>
 
-> Captured against the live deployment — regenerate any time with `pnpm --filter @frameboard/web exec node scripts/capture-screenshots.mjs`.
+> Regenerate any time with `pnpm --filter @frameboard/web exec node scripts/capture-screenshots.mjs`. Defaults target the live deployment; pass `BASE=http://localhost:3000 WS_Q2=<id>` to capture from a local dev server before pushing changes that aren't deployed yet.
 
 ## Why Frameboard?
 
@@ -67,9 +67,9 @@ Alpha, built in the open. **Live and deployed** at [frameboard.pages.dev](https:
 | Layer | Status |
 |---|---|
 | Database schema | ✅ Users, workspaces, items, RICE scores |
-| Backend API | ✅ Full CRUD + RICE upsert (44 pytest tests) |
-| Frontend workspace list + board | ✅ Create, score, edit (modal + inline), delete |
-| Visualization & filtering | ✅ Top-10 bars + Effort × Score scatter, search / status / effort / score chips, URL-synced state |
+| Backend API | ✅ Full CRUD + RICE upsert + item tags + history log (56 pytest tests) |
+| Frontend workspace list + board | ✅ Create, score, edit (modal + inline), delete, tag |
+| Visualization & filtering | ✅ Top-10 bars + Effort × Score scatter, search / status / effort / score / tag chips, URL-synced state |
 | Metric tooltips | ✅ Inline (i) on Reach / Impact / Confidence / Effort / Score |
 | End-to-end test suite | ✅ 5 Playwright scenarios, green in CI |
 | Production deployment | ✅ Cloudflare Pages + Render + Neon |
@@ -140,7 +140,7 @@ Brings up Postgres (`:5433`), the FastAPI backend (`:8001`), and the Next.js fro
 | Backend  | FastAPI, Python 3.12+, SQLAlchemy 2.0, Alembic             |
 | Database | PostgreSQL 16 (Dockerized, port `5433` to avoid conflicts) |
 | Monorepo | pnpm workspaces + Turborepo                                |
-| Testing  | pytest (44 tests, backend), Playwright (5 e2e scenarios)   |
+| Testing  | pytest (56 tests, backend), Playwright (5 e2e scenarios)   |
 | Deploy   | Cloudflare Pages (frontend) + Render (backend) + Neon (DB) |
 | CI       | GitHub Actions — web, api, e2e jobs all gated on PRs       |
 
@@ -163,8 +163,8 @@ Brings up Postgres (`:5433`), the FastAPI backend (`:8001`), and the Next.js fro
 - [x] Board quick-wins filter — effort + score bucket chips (URL `?effort=` `?score=`)
 - [x] Metric legend tooltips — `(i)` buttons explain Reach / Impact (0.25→3 scale) / Confidence / Effort / Score
 - [x] Self-host Docker image — `docker compose -f docker-compose.selfhost.yml up --build` brings up Postgres + API + Web
-- [ ] Score history / change-log timeline per item
-- [ ] Item tags / categories — schema addition + tag filter UI
+- [x] Item tags / categories — JSON column on items, pill input in the edit modal, tag chip filter on the board (URL `?tag=`)
+- [x] Score history / change-log timeline per item — append-only `item_history` table records RICE changes and field edits; collapsible timeline in the edit modal
 - [ ] ICE / MoSCoW / Value-vs-Effort frameworks
 - [ ] Collaborative scoring with disagreement visualization
 - [ ] Jira / Linear / Notion export

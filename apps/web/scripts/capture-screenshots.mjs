@@ -14,8 +14,14 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.resolve(__dirname, "../../../docs/screenshots");
 
-const BASE = "https://frameboard.pages.dev";
-const WS_Q2 = "b91950ea-d759-4efd-b478-f8a2a4f16c40";
+// Defaults target the live deployment; override via env to capture from
+// a local dev server before pushing changes that aren't deployed yet:
+//
+//   BASE=http://localhost:3000 \
+//   WS_Q2=8e9b7d20-6af1-4243-ad04-4debbadbe1ab \
+//     pnpm --filter @frameboard/web exec node scripts/capture-screenshots.mjs
+const BASE = process.env.BASE ?? "https://frameboard.pages.dev";
+const WS_Q2 = process.env.WS_Q2 ?? "b91950ea-d759-4efd-b478-f8a2a4f16c40";
 
 const shots = [
   {
@@ -40,10 +46,11 @@ const shots = [
   },
   {
     name: "05-filter-buckets",
-    // Effort + Score chip filters active — narrows 25 items to the
-    // single "Quick & high-score" winner (Ship dark mode).
-    url: `${BASE}/workspaces/${WS_Q2}?effort=quick&score=high`,
-    viewport: { width: 1280, height: 720 },
+    // Effort + Tag chip filters active together — demonstrates all
+    // three filter dimensions (Effort bucket, Score bucket sitting at
+    // "Any", and Tag chip) visible in the filter bar at once.
+    url: `${BASE}/workspaces/${WS_Q2}?effort=quick&tag=feature`,
+    viewport: { width: 1280, height: 800 },
   },
   {
     name: "06-tooltip-impact",
@@ -62,6 +69,15 @@ const shots = [
   },
 ];
 
+// Optional whitelist: `SHOTS=01-board-hero,04-filter-search` captures
+// only those names — useful when you only need a couple updated.
+const shotsFilter = process.env.SHOTS
+  ? new Set(process.env.SHOTS.split(",").map((s) => s.trim()))
+  : null;
+const shotsToRun = shotsFilter
+  ? shots.filter((s) => shotsFilter.has(s.name))
+  : shots;
+
 await mkdir(OUT_DIR, { recursive: true });
 
 // Warm up the Render free-tier backend so the first navigation doesn't
@@ -70,10 +86,16 @@ await fetch("https://frameboard-api.onrender.com/healthz").catch(() => {});
 
 const browser = await chromium.launch();
 try {
-  for (const shot of shots) {
+  for (const shot of shotsToRun) {
     const ctx = await browser.newContext({ viewport: shot.viewport });
     const page = await ctx.newPage();
     await page.goto(shot.url, { waitUntil: "networkidle", timeout: 60_000 });
+    // Hide the Next.js dev-mode error/build indicator (only present
+    // when capturing against `pnpm dev`) so it doesn't appear in
+    // marketing screenshots. No-op on production builds.
+    await page.addStyleTag({
+      content: "nextjs-portal { display: none !important; }",
+    });
     // Small delay so any client-side hydration / chart layout settles.
     await page.waitForTimeout(600);
     if (shot.afterLoad) {
