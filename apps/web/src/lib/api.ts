@@ -8,7 +8,6 @@ import type {
   ScoreResult,
   UpdateItemInput,
   Workspace,
-  WorkspaceDetail,
 } from "@frameboard/shared";
 
 const API_BASE_URL =
@@ -126,8 +125,10 @@ export function createWorkspace(input: CreateWorkspaceInput): Promise<Workspace>
   return request<Workspace>("/v1/workspaces", { method: "POST", body: input });
 }
 
-export function getWorkspace(workspaceId: string): Promise<WorkspaceDetail> {
-  return request<WorkspaceDetail>(`/v1/workspaces/${workspaceId}`);
+// Returns just workspace metadata (no nested items). Use getWorkspaceBoard
+// when you need the items — that endpoint returns them in the right order.
+export function getWorkspace(workspaceId: string): Promise<Workspace> {
+  return request<Workspace>(`/v1/workspaces/${workspaceId}`);
 }
 
 export function getWorkspaceBoard(workspaceId: string): Promise<BacklogItem[]> {

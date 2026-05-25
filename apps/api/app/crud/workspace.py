@@ -5,9 +5,8 @@ from __future__ import annotations
 from uuid import UUID
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
-from app.models.backlog_item import BacklogItem
 from app.models.user import User
 from app.models.workspace import Workspace
 
@@ -39,12 +38,10 @@ def list_workspaces(db: Session, *, owner_email: str | None = None) -> list[Work
 
 
 def get_workspace(db: Session, workspace_id: UUID) -> Workspace | None:
-    stmt = (
-        select(Workspace)
-        .where(Workspace.id == workspace_id)
-        .options(selectinload(Workspace.items).selectinload(BacklogItem.rice_score))
-    )
-    return db.execute(stmt).scalar_one_or_none()
+    # No selectinload(items) — the detail endpoint returns just metadata
+    # (matching WorkspaceRead). Callers needing items use /board, which has
+    # its own optimized query with the right ordering.
+    return db.get(Workspace, workspace_id)
 
 
 def delete_workspace(db: Session, workspace_id: UUID) -> bool:

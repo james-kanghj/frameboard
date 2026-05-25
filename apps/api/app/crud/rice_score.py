@@ -4,11 +4,23 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import nulls_last, select
+from sqlalchemy import func, nulls_last, select, update
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.backlog_item import BacklogItem
 from app.models.rice_score import RICEScore
+
+
+def _touch_item(db: Session, item_id: UUID) -> None:
+    """Bump the parent BacklogItem's `updated_at` so the item reflects
+    scoring activity. Without this, score-only changes are invisible to
+    any future 'recently modified items' feature — only RICEScore.updated_at
+    moves on its own."""
+    db.execute(
+        update(BacklogItem)
+        .where(BacklogItem.id == item_id)
+        .values(updated_at=func.now())
+    )
 
 
 def upsert_rice_score(
@@ -43,6 +55,7 @@ def upsert_rice_score(
         existing.effort = effort
         existing.score = score_value
         rice = existing
+    _touch_item(db, item_id)
     db.commit()
     db.refresh(rice)
     return rice
@@ -56,6 +69,7 @@ def delete_rice_score(db: Session, item_id: UUID) -> None:
     if existing is None:
         return
     db.delete(existing)
+    _touch_item(db, item_id)
     db.commit()
 
 

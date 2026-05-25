@@ -2,14 +2,24 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import pytest
 from sqlalchemy import func, select
+from sqlalchemy import update as sa_update
 
+from app.models.backlog_item import BacklogItem
 from app.models.rice_score import RICEScore
 
 NIL_UUID = "00000000-0000-0000-0000-000000000000"
+
+
+def _naive_utc(seconds_ago: int = 0) -> datetime:
+    """SQLite returns naive datetimes from `DateTime(timezone=True)` columns
+    (and func.now() in UTC), so the test-side anchor must also be naive to
+    avoid offset-naive vs offset-aware comparison errors."""
+    return datetime.now(UTC).replace(tzinfo=None) - timedelta(seconds=seconds_ago)
 
 
 @pytest.fixture()
@@ -92,6 +102,75 @@ def test_rice_score_upserts_not_duplicates(client, db_session, item_id):
         select(func.count(RICEScore.id)).where(RICEScore.item_id == UUID(item_id))
     ).scalar_one()
     assert count == 1
+
+
+def test_score_bumps_parent_item_updated_at(client, db_session, workspace_id):
+    """Scoring an item must touch BacklogItem.updated_at, not just
+    RICEScore.updated_at — otherwise a future 'recently modified items'
+    view would miss score-only changes."""
+    create = client.post(
+        f"/v1/workspaces/{workspace_id}/items", json={"title": "Scorable"}
+    )
+    item_uuid = UUID(create.json()["id"])
+
+    # Anchor updated_at in the past so the touch is unambiguously visible
+    # regardless of underlying clock precision.
+    old_ts = _naive_utc(seconds_ago=30)
+    db_session.execute(
+        sa_update(BacklogItem)
+        .where(BacklogItem.id == item_uuid)
+        .values(updated_at=old_ts)
+    )
+    db_session.commit()
+
+    response = client.post(
+        "/v1/score/rice",
+        json={
+            "item_id": str(item_uuid),
+            "reach": 1000,
+            "impact": 1,
+            "confidence": 0.5,
+            "effort": 2,
+        },
+    )
+    assert response.status_code == 200
+
+    db_session.expire_all()
+    item_after = db_session.get(BacklogItem, item_uuid)
+    assert item_after is not None
+    assert item_after.updated_at > old_ts
+
+
+def test_delete_rice_also_touches_parent_item(client, db_session, workspace_id, item_id):
+    """Removing a score is also a state change — touch updated_at on the
+    parent so activity-sorted views stay accurate."""
+    # Establish a score first.
+    client.post(
+        "/v1/score/rice",
+        json={
+            "item_id": item_id,
+            "reach": 1000,
+            "impact": 1,
+            "confidence": 0.5,
+            "effort": 2,
+        },
+    )
+
+    item_uuid = UUID(item_id)
+    old_ts = _naive_utc(seconds_ago=30)
+    db_session.execute(
+        sa_update(BacklogItem)
+        .where(BacklogItem.id == item_uuid)
+        .values(updated_at=old_ts)
+    )
+    db_session.commit()
+
+    assert client.delete(f"/v1/items/{item_id}/rice").status_code == 204
+
+    db_session.expire_all()
+    item_after = db_session.get(BacklogItem, item_uuid)
+    assert item_after is not None
+    assert item_after.updated_at > old_ts
 
 
 def test_rice_rejects_zero_effort(client, item_id):

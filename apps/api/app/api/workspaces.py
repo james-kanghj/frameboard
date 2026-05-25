@@ -11,7 +11,7 @@ from app.crud import backlog_item as item_crud
 from app.crud import workspace as workspace_crud
 from app.db.session import get_db
 from app.schemas.backlog_item import BacklogItemCreate, BacklogItemRead
-from app.schemas.workspace import WorkspaceCreate, WorkspaceDetail, WorkspaceRead
+from app.schemas.workspace import WorkspaceCreate, WorkspaceRead
 
 router = APIRouter(prefix="/workspaces")
 
@@ -35,8 +35,8 @@ def list_workspaces(
     return workspace_crud.list_workspaces(db, owner_email=owner_email)
 
 
-@router.get("/{workspace_id}", response_model=WorkspaceDetail)
-def get_workspace(workspace_id: UUID, db: Session = Depends(get_db)) -> WorkspaceDetail:
+@router.get("/{workspace_id}", response_model=WorkspaceRead)
+def get_workspace(workspace_id: UUID, db: Session = Depends(get_db)) -> WorkspaceRead:
     workspace = workspace_crud.get_workspace(db, workspace_id)
     if workspace is None:
         raise HTTPException(

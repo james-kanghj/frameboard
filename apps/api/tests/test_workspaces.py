@@ -86,24 +86,24 @@ def test_list_workspaces_unknown_owner_returns_empty(client):
     assert response.json() == []
 
 
-def test_get_workspace_detail_includes_items(client):
+def test_get_workspace_returns_metadata_only(client):
+    """GET /v1/workspaces/{id} returns workspace metadata only — items live
+    on /board (where they get the proper score-based ordering). Returning
+    items here would mean two separate fetches load the same data when the
+    frontend wants the sorted board view."""
     create_resp = client.post(
         "/v1/workspaces", json={"name": "Team", "owner_email": "owner@example.com"}
     )
     ws_id = create_resp.json()["id"]
 
     client.post(f"/v1/workspaces/{ws_id}/items", json={"title": "First item"})
-    client.post(f"/v1/workspaces/{ws_id}/items", json={"title": "Second item"})
 
     response = client.get(f"/v1/workspaces/{ws_id}")
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == "Team"
-    assert len(data["items"]) == 2
-    titles = {item["title"] for item in data["items"]}
-    assert titles == {"First item", "Second item"}
-    for item in data["items"]:
-        assert item["rice_score"] is None
+    assert data["id"] == ws_id
+    assert "items" not in data
 
 
 def test_get_workspace_404(client):

@@ -7,8 +7,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.schemas.backlog_item import BacklogItemRead
-
 
 class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -32,7 +30,3 @@ class WorkspaceRead(BaseModel):
     owner_id: UUID
     created_at: datetime
     updated_at: datetime
-
-
-class WorkspaceDetail(WorkspaceRead):
-    items: list[BacklogItemRead] = []

@@ -34,11 +34,6 @@ export interface Workspace {
   updatedAt: string;
 }
 
-// Mirrors backend WorkspaceDetail — includes items.
-export interface WorkspaceDetail extends Workspace {
-  items: BacklogItem[];
-}
-
 // ---------- Input shapes (FE → BE; the api client snake_cases keys) ----------
 
 export interface CreateWorkspaceInput {
