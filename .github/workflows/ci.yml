@@ -94,6 +94,11 @@ jobs:
           DATABASE_URL: "postgresql+psycopg://frameboard:frameboard@localhost:5433/frameboard"
           FRAMEBOARD_TEST_MODE: "1"
           API_CORS_ORIGINS: "http://localhost:3000"
+          # E2E exercises the API directly via fetch without minting JWTs.
+          # AUTH_DISABLED makes the backend trust requests under DEV_USER_EMAIL,
+          # matching the same contract the conftest uses for unit tests.
+          AUTH_DISABLED: "1"
+          DEV_USER_EMAIL: "61649060+james-kanghj@users.noreply.github.com"
         run: |
           source .venv/bin/activate
           nohup uvicorn app.main:app --port 8001 > /tmp/api.log 2>&1 &
@@ -110,6 +115,10 @@ jobs:
         env:
           NEXT_PUBLIC_API_BASE_URL: "http://localhost:8001"
           NEXT_PUBLIC_DEV_USER_EMAIL: "61649060+james-kanghj@users.noreply.github.com"
+          # NextAuth's auth.ts throws at import time without a secret —
+          # any non-empty value is fine for the disabled-auth bypass.
+          NEXTAUTH_SECRET: "ci-dummy-secret-not-used"
+          NEXT_PUBLIC_AUTH_DISABLED: "1"
         run: pnpm --filter @frameboard/web build
 
       - name: Run E2E tests
@@ -119,6 +128,10 @@ jobs:
           NEXT_PUBLIC_DEV_USER_EMAIL: "61649060+james-kanghj@users.noreply.github.com"
           PLAYWRIGHT_API_URL: "http://localhost:8001"
           E2E_USER_EMAIL: "61649060+james-kanghj@users.noreply.github.com"
+          # Mirror the build-time vars so `next dev` (which Playwright's
+          # webServer launches) picks the same disabled-auth path.
+          NEXTAUTH_SECRET: "ci-dummy-secret-not-used"
+          NEXT_PUBLIC_AUTH_DISABLED: "1"
         run: pnpm --filter @frameboard/web e2e
 
       - name: Upload Playwright report on failure
