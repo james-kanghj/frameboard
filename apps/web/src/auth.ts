@@ -82,4 +82,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
   },
+  logger: {
+    // Auth.js logs JWTSessionError to console BEFORE throwing. A user
+    // landing with a cookie signed by a previous NEXTAUTH_SECRET (or
+    // NextAuth's default JWE before the HS256 swap) is an expected,
+    // self-healing condition — we already catch the throw at the
+    // `auth()` callsites. Suppress the noisy console.error so it
+    // doesn't trigger the dev overlay; keep real errors visible.
+    error(error) {
+      if (error?.name === "JWTSessionError") return;
+      console.error(error);
+    },
+  },
 });
