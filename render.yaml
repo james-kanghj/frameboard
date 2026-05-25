@@ -1,0 +1,34 @@
+# /render.yaml
+#
+# Render Blueprint for the Frameboard backend (apps/api).
+# Push to main → Render picks up changes via the Blueprint connection
+# and redeploys this service automatically.
+#
+# Required env vars to set in the Render dashboard before first deploy:
+#   DATABASE_URL       — Neon connection string (postgresql+psycopg://...)
+#   API_CORS_ORIGINS   — comma-separated frontend origins
+#                        (e.g. "https://frameboard.vercel.app")
+
+services:
+  - type: web
+    name: frameboard-api
+    runtime: python
+    region: singapore
+    plan: free
+    rootDir: apps/api
+    # Install production deps, then run any pending migrations. Alembic is
+    # idempotent — re-running when already at head is a no-op, so it's safe
+    # to put here rather than in a separate release step (which the free
+    # plan doesn't fully support).
+    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    # Render injects $PORT; 0.0.0.0 lets the proxy reach the worker.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: DATABASE_URL
+        sync: false
+      - key: API_CORS_ORIGINS
+        sync: false

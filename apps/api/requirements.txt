@@ -1,0 +1,17 @@
+# /apps/api/requirements.txt
+#
+# Production dependencies for the FastAPI backend. Mirrors the
+# [project.dependencies] section of pyproject.toml. Dev/test deps
+# (pytest, ruff, mypy, httpx) live in [project.optional-dependencies].dev
+# and are intentionally excluded here so the Render build image stays
+# small and reproducible.
+
+fastapi[standard]>=0.115.0
+uvicorn[standard]>=0.32.0
+sqlalchemy>=2.0.36
+alembic>=1.14.0
+psycopg[binary]>=3.2.3
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4

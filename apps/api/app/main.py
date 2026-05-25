@@ -51,3 +51,11 @@ async def root() -> dict[str, str]:
         "version": "0.1.0",
         "docs": "/docs",
     }
+
+
+# Render's default health check probes this path. Kept separate from the
+# existing /health endpoint (which the e2e suite uses) so platform-specific
+# probing conventions don't get tangled with our application's checks.
+@app.get("/healthz")
+async def healthz() -> dict[str, str]:
+    return {"status": "ok"}
