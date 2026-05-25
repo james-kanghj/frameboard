@@ -867,17 +867,23 @@ function MetricLegend() {
     },
   ];
   return (
-    <dl className="grid grid-cols-2 gap-x-5 gap-y-3 rounded-xl border border-slate-200 bg-slate-50/50 px-5 py-4 text-xs sm:grid-cols-3 lg:grid-cols-5">
-      {entries.map(({ term, def, detail }) => (
-        <div key={term} className="space-y-0.5">
-          <dt className="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
-            <span>{term}</span>
-            <InfoTooltip label={`${term} — more info`}>{detail}</InfoTooltip>
-          </dt>
-          <dd className="text-slate-600">{def}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className="space-y-2">
+      <p className="text-sm text-slate-600">
+        Grade each item on Reach × Impact × Confidence ÷ Effort to surface
+        the highest-leverage work.
+      </p>
+      <dl className="grid grid-cols-2 gap-x-5 gap-y-3 rounded-xl border border-slate-200 bg-slate-50/50 px-5 py-4 text-xs sm:grid-cols-3 lg:grid-cols-5">
+        {entries.map(({ term, def, detail }) => (
+          <div key={term} className="space-y-0.5">
+            <dt className="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
+              <span>{term}</span>
+              <InfoTooltip label={`${term} — more info`}>{detail}</InfoTooltip>
+            </dt>
+            <dd className="text-slate-600">{def}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }
 

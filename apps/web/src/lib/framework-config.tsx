@@ -50,6 +50,11 @@ export interface FrameworkConfig {
   displayName: string;
   // Compact formula displayed in the metric legend and modal hint.
   formula: string;
+  // One-liner shown above the metric legend on the board — frames
+  // *why* the user is filling in these inputs. Different shape than
+  // `formula` (which is the bare math) so the prose can read
+  // naturally.
+  intro: string;
   // Input fields rendered in the edit modal / scoring form.
   inputs: ScoreInputDef[];
   // Pure compute mirroring the backend's score_engine. Returns null when
@@ -137,6 +142,8 @@ export const FRAMEWORK_CONFIGS: Record<Framework, FrameworkConfig> = {
     framework: "RICE",
     displayName: "RICE",
     formula: "(Reach × Impact × Confidence) ÷ Effort",
+    intro:
+      "Grade each item on Reach × Impact × Confidence ÷ Effort to surface the highest-leverage work.",
     inputs: RICE_INPUTS,
     scoreFn(inputs) {
       const r = num(inputs.reach);
@@ -212,6 +219,8 @@ export const FRAMEWORK_CONFIGS: Record<Framework, FrameworkConfig> = {
     framework: "ICE",
     displayName: "ICE",
     formula: "Impact × Confidence × Ease",
+    intro:
+      "Score items on Impact × Confidence × Ease (each 1–10) to spot the easy wins.",
     inputs: ICE_INPUTS,
     scoreFn(inputs) {
       const i = num(inputs.impact);
@@ -250,6 +259,8 @@ export const FRAMEWORK_CONFIGS: Record<Framework, FrameworkConfig> = {
     framework: "ValueEffort",
     displayName: "Value × Effort",
     formula: "Value ÷ Effort",
+    intro:
+      "Score items on Value ÷ Effort to find the best ROI per unit of work.",
     inputs: VALUE_EFFORT_INPUTS,
     scoreFn(inputs) {
       const v = num(inputs.value);
@@ -283,6 +294,8 @@ export const FRAMEWORK_CONFIGS: Record<Framework, FrameworkConfig> = {
     framework: "MoSCoW",
     displayName: "MoSCoW",
     formula: "Must / Should / Could / Won't",
+    intro:
+      "Sort items into Must / Should / Could / Won't to lock this cycle's scope.",
     inputs: [MOSCOW_BUCKETS],
     scoreFn(inputs) {
       const bucket = inputs.bucket;
@@ -317,6 +330,7 @@ export const FRAMEWORK_CONFIGS: Record<Framework, FrameworkConfig> = {
     framework: "Kano",
     displayName: "Kano",
     formula: "(not implemented)",
+    intro: "Kano framework support is not implemented yet.",
     inputs: [],
     scoreFn: () => null,
     metrics: [],

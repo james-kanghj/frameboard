@@ -363,17 +363,20 @@ function FilterBar({
 
 function MetricLegend({ config }: { config: FrameworkConfig }) {
   return (
-    <dl className="grid grid-cols-2 gap-x-5 gap-y-3 rounded-xl border border-slate-200 bg-slate-50/50 px-5 py-4 text-xs sm:grid-cols-3 lg:grid-cols-4">
-      {config.metrics.map(({ term, def, detail }) => (
-        <div key={term} className="space-y-0.5">
-          <dt className="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
-            <span>{term}</span>
-            <InfoTooltip label={`${term} — more info`}>{detail}</InfoTooltip>
-          </dt>
-          <dd className="text-slate-600">{def}</dd>
-        </div>
-      ))}
-    </dl>
+    <div className="space-y-2">
+      <p className="text-sm text-slate-600">{config.intro}</p>
+      <dl className="grid grid-cols-2 gap-x-5 gap-y-3 rounded-xl border border-slate-200 bg-slate-50/50 px-5 py-4 text-xs sm:grid-cols-3 lg:grid-cols-4">
+        {config.metrics.map(({ term, def, detail }) => (
+          <div key={term} className="space-y-0.5">
+            <dt className="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
+              <span>{term}</span>
+              <InfoTooltip label={`${term} — more info`}>{detail}</InfoTooltip>
+            </dt>
+            <dd className="text-slate-600">{def}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }
 
