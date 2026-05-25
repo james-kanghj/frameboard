@@ -181,3 +181,5 @@ A few issues that come up when setting this up cold:
 - **`pnpm dev` fails with `EADDRINUSE :::3000`** — a previous Next.js process is still running. Kill it: `lsof -ti :3000 | xargs kill -9`.
 
 - **`pnpm install` refuses to run, saying the project requires a specific pnpm version** — the `packageManager` field in the root `package.json` is pinned. Either match that version locally, or bump the pin to match what you have (`pnpm --version`).
+
+- **`Cannot find module './XX.js'` or infinite loading after running a production build alongside dev** — Next.js's dev server and production build write incompatible chunk IDs to the same `apps/web/.next` directory. If you've run `next build` for any reason (verification, CI debug, etc.), clear the cache and restart the dev server: `rm -rf apps/web/.next && pnpm --filter @frameboard/web dev`.
