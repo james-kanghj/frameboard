@@ -23,17 +23,23 @@ function toSnake(key: string): string {
   return key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 }
 
+// Cross-realm-safe plain-object check. The Next.js edge runtime parses
+// fetch JSON in a different V8 realm than the page's `Object`, so the more
+// common `value.constructor === Object` returns false even for plain
+// objects — leaving snake_case keys untouched on the SSR path while the
+// browser path camelCases them correctly. `Object.prototype.toString`
+// reads the value's own [[Class]] slot, which is invariant across realms.
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Object.prototype.toString.call(value) === "[object Object]";
+}
+
 function transformKeys<T>(input: unknown, fn: (key: string) => string): T {
   if (Array.isArray(input)) {
     return input.map((v) => transformKeys<unknown>(v, fn)) as T;
   }
-  if (
-    input !== null &&
-    typeof input === "object" &&
-    (input as object).constructor === Object
-  ) {
+  if (isPlainObject(input)) {
     const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(input as Record<string, unknown>)) {
+    for (const [k, v] of Object.entries(input)) {
       out[fn(k)] = transformKeys<unknown>(v, fn);
     }
     return out as T;
