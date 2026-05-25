@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function HomePage() {
   return (
     <main className="mx-auto max-w-3xl px-6 py-24">
@@ -11,17 +13,17 @@ export default function HomePage() {
           and Kano prioritization — without leaving the browser.
         </p>
         <div className="flex flex-wrap gap-3 pt-4">
-          <a
-            href="https://github.com/james-kanghj/frameboard"
+          <Link
+            href="/workspaces"
             className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700"
           >
-            Star on GitHub
-          </a>
+            Open the app →
+          </Link>
           <a
-            href="/docs"
+            href="https://github.com/james-kanghj/frameboard"
             className="rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-900 hover:bg-slate-50"
           >
-            Read the docs
+            Star on GitHub
           </a>
         </div>
       </div>
