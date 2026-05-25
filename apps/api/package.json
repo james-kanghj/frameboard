@@ -1,0 +1,15 @@
+/apps/api/package.json
+
+{
+  "name": "@frameboard/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Frameboard backend (Python wrapped for Turbo)",
+  "scripts": {
+    "dev": "uvicorn app.main:app --reload --port 8000",
+    "build": "echo 'No build step for Python API'",
+    "lint": "ruff check .",
+    "test": "pytest",
+    "typecheck": "mypy app"
+  }
+}
