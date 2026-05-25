@@ -100,6 +100,7 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
     scoreParam === "high" || scoreParam === "medium" || scoreParam === "low"
       ? scoreParam
       : "all";
+  const tagFilter = searchParams.get("tag") ?? "all";
 
   const setQueryParam = useCallback(
     (key: string, value: string, defaultValue: string) => {
@@ -121,6 +122,7 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
     next.delete("status");
     next.delete("effort");
     next.delete("score");
+    next.delete("tag");
     const qs = next.toString();
     router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
   }, [searchParams, router, pathname]);
@@ -130,6 +132,18 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
   // server's board ordering: score DESC (nulls last), then created_at ASC.
   const sortedItems = useMemo(() => sortByScore(items), [items]);
 
+  // All distinct tags present in the workspace — drives the tag chip
+  // group in the filter bar. Sorted case-insensitively for stable order.
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const it of items) {
+      for (const t of it.tags ?? []) set.add(t);
+    }
+    return Array.from(set).sort((a, b) =>
+      a.toLowerCase().localeCompare(b.toLowerCase()),
+    );
+  }, [items]);
+
   const filteredItems = useMemo(() => {
     let result = sortedItems;
     const q = search.trim().toLowerCase();
@@ -137,7 +151,8 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
       result = result.filter(
         (it) =>
           it.title.toLowerCase().includes(q) ||
-          (it.description?.toLowerCase().includes(q) ?? false),
+          (it.description?.toLowerCase().includes(q) ?? false) ||
+          (it.tags ?? []).some((t) => t.toLowerCase().includes(q)),
       );
     }
     if (status === "scored") {
@@ -155,14 +170,18 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
         return effortTest(it.riceScore.effort) && scoreTest(it.riceScore.score);
       });
     }
+    if (tagFilter !== "all") {
+      result = result.filter((it) => (it.tags ?? []).includes(tagFilter));
+    }
     return result;
-  }, [sortedItems, search, status, effort, scoreBucket]);
+  }, [sortedItems, search, status, effort, scoreBucket, tagFilter]);
 
   const filterActive =
     search.trim().length > 0 ||
     status !== "all" ||
     effort !== "all" ||
-    scoreBucket !== "all";
+    scoreBucket !== "all" ||
+    tagFilter !== "all";
 
   const pushToast: ToastPusher = (tone, message) => {
     const id = Date.now() + Math.random();
@@ -205,10 +224,13 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
               status={status}
               effort={effort}
               scoreBucket={scoreBucket}
+              tagFilter={tagFilter}
+              allTags={allTags}
               onSearchChange={(v) => setQueryParam("q", v, "")}
               onStatusChange={(v) => setQueryParam("status", v, "all")}
               onEffortChange={(v) => setQueryParam("effort", v, "all")}
               onScoreBucketChange={(v) => setQueryParam("score", v, "all")}
+              onTagChange={(v) => setQueryParam("tag", v, "all")}
               onClear={clearFilters}
               filterActive={filterActive}
             />
@@ -273,10 +295,13 @@ function FilterBar({
   status,
   effort,
   scoreBucket,
+  tagFilter,
+  allTags,
   onSearchChange,
   onStatusChange,
   onEffortChange,
   onScoreBucketChange,
+  onTagChange,
   onClear,
   filterActive,
 }: {
@@ -284,10 +309,13 @@ function FilterBar({
   status: FilterStatus;
   effort: EffortBucket;
   scoreBucket: ScoreBucket;
+  tagFilter: string;
+  allTags: string[];
   onSearchChange: (value: string) => void;
   onStatusChange: (value: FilterStatus) => void;
   onEffortChange: (value: EffortBucket) => void;
   onScoreBucketChange: (value: ScoreBucket) => void;
+  onTagChange: (value: string) => void;
   onClear: () => void;
   filterActive: boolean;
 }) {
@@ -377,6 +405,18 @@ function FilterBar({
           onChange={onScoreBucketChange}
           options={SCORE_BUCKETS.map((b) => ({ value: b.value, label: b.label }))}
         />
+        {allTags.length > 0 && (
+          <ChipGroup
+            label="Tag"
+            ariaLabel="Filter by tag"
+            value={tagFilter}
+            onChange={onTagChange}
+            options={[
+              { value: "all", label: "Any" },
+              ...allTags.map((t) => ({ value: t, label: t })),
+            ]}
+          />
+        )}
       </div>
     </div>
   );
@@ -1146,6 +1186,23 @@ function BoardRow({
         {item.description && (
           <div className="mt-0.5 text-xs text-slate-500 line-clamp-1">
             {item.description}
+          </div>
+        )}
+        {(item.tags ?? []).length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {(item.tags ?? []).slice(0, 3).map((tag, idx) => (
+              <span
+                key={`${tag}-${idx}`}
+                className="inline-block rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600"
+              >
+                {tag}
+              </span>
+            ))}
+            {(item.tags ?? []).length > 3 && (
+              <span className="text-[10px] text-slate-400">
+                +{(item.tags ?? []).length - 3}
+              </span>
+            )}
           </div>
         )}
       </td>

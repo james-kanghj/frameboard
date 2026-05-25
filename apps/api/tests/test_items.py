@@ -27,6 +27,53 @@ def test_create_item(client, workspace_id):
     assert data["description"] == "Toggle in user settings"
     assert data["workspace_id"] == workspace_id
     assert data["rice_score"] is None
+    assert data["tags"] == []
+
+
+def test_create_item_with_tags_normalises(client, workspace_id):
+    """Tags are trimmed, deduped (case-insensitive), blanks dropped,
+    and over-long entries skipped — backend is the source of truth."""
+    response = client.post(
+        f"/v1/workspaces/{workspace_id}/items",
+        json={
+            "title": "Tagged item",
+            "tags": [
+                "feature",
+                "  feature  ",  # trims, then dedupes against the first
+                "Feature",  # case-insensitive dedupe
+                "",  # empty, dropped
+                "infra",
+                "x" * 31,  # too long, dropped
+            ],
+        },
+    )
+    assert response.status_code == 201
+    assert response.json()["tags"] == ["feature", "infra"]
+
+
+def test_update_item_tags_clears_and_replaces(client, workspace_id):
+    created = client.post(
+        f"/v1/workspaces/{workspace_id}/items",
+        json={"title": "Tag me", "tags": ["a", "b", "c"]},
+    )
+    item_id = created.json()["id"]
+
+    # Replace with a smaller set.
+    response = client.patch(f"/v1/items/{item_id}", json={"tags": ["x"]})
+    assert response.status_code == 200
+    assert response.json()["tags"] == ["x"]
+
+    # Empty list explicitly clears tags.
+    response = client.patch(f"/v1/items/{item_id}", json={"tags": []})
+    assert response.status_code == 200
+    assert response.json()["tags"] == []
+
+    # Omitting tags entirely leaves them alone (smoke: set, then update title only).
+    client.patch(f"/v1/items/{item_id}", json={"tags": ["kept"]})
+    response = client.patch(f"/v1/items/{item_id}", json={"title": "Title only"})
+    assert response.status_code == 200
+    assert response.json()["title"] == "Title only"
+    assert response.json()["tags"] == ["kept"]
 
 
 def test_create_item_no_description(client, workspace_id):

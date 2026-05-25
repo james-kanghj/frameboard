@@ -73,6 +73,7 @@ def create_item(
         workspace_id=workspace_id,
         title=payload.title,
         description=payload.description,
+        tags=payload.tags,
     )
 
 

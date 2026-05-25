@@ -20,6 +20,7 @@ export interface BacklogItem {
   workspaceId: string;
   title: string;
   description: string | null;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
   riceScore: RICEScoreData | null;
@@ -44,11 +45,15 @@ export interface CreateWorkspaceInput {
 export interface CreateItemInput {
   title: string;
   description?: string | null;
+  tags?: string[];
 }
 
 export interface UpdateItemInput {
   title?: string;
   description?: string | null;
+  // `null` is not allowed here — backend treats undefined as "leave alone"
+  // and an empty array `[]` as "clear all tags".
+  tags?: string[];
 }
 
 export interface ScoreRICEInput {

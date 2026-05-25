@@ -17,8 +17,14 @@ def create_item(
     workspace_id: UUID,
     title: str,
     description: str | None,
+    tags: list[str] | None = None,
 ) -> BacklogItem:
-    item = BacklogItem(workspace_id=workspace_id, title=title, description=description)
+    item = BacklogItem(
+        workspace_id=workspace_id,
+        title=title,
+        description=description,
+        tags=tags or [],
+    )
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -48,10 +54,16 @@ def update_item(db: Session, *, item_id: UUID, **fields: Any) -> BacklogItem | N
     """Partial update. Caller is expected to pass only fields that should be
     written (e.g. via Pydantic `model_dump(exclude_unset=True)`), so PATCH
     with an omitted field leaves the column untouched but PATCH with an
-    explicit `null` clears it."""
+    explicit `null` clears it.
+
+    `tags` is NOT NULL in the DB but `None` from the schema means
+    "leave alone" (the schema uses None as the sentinel for omitted).
+    Empty list `[]` is the explicit way to clear all tags."""
     item = db.get(BacklogItem, item_id)
     if item is None:
         return None
+    if "tags" in fields and fields["tags"] is None:
+        del fields["tags"]
     for key, value in fields.items():
         setattr(item, key, value)
     db.commit()

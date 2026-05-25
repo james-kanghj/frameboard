@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
 
 import type { BacklogItem, RICEImpact } from "@frameboard/shared";
 
 import { ApiError, scoreRICE, updateItem } from "@/lib/api";
 import { ImpactSelect } from "@/components/ImpactSelect";
+
+const MAX_TAGS_PER_ITEM = 10;
+const MAX_TAG_LENGTH = 30;
+
+function arraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((v, i) => v === b[i]);
+}
 
 interface Props {
   item: BacklogItem;
@@ -29,6 +37,7 @@ export function EditItemModal({ item, onClose, onSaved, onError }: Props) {
   const [effort, setEffort] = useState<string>(
     item.riceScore !== null ? String(item.riceScore.effort) : "",
   );
+  const [tags, setTags] = useState<string[]>(item.tags);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -78,6 +87,7 @@ export function EditItemModal({ item, onClose, onSaved, onError }: Props) {
     const newDescription = description.trim() || null;
     const titleChanged = newTitle !== item.title;
     const descriptionChanged = newDescription !== item.description;
+    const tagsChanged = !arraysEqual(tags, item.tags);
 
     const existing = item.riceScore;
     const riceShouldSubmit = numericsFilled && riceValid;
@@ -90,10 +100,15 @@ export function EditItemModal({ item, onClose, onSaved, onError }: Props) {
         effortN !== existing.effort);
 
     const promises: Promise<unknown>[] = [];
-    if (titleChanged || descriptionChanged) {
-      const patch: { title?: string; description?: string | null } = {};
+    if (titleChanged || descriptionChanged || tagsChanged) {
+      const patch: {
+        title?: string;
+        description?: string | null;
+        tags?: string[];
+      } = {};
       if (titleChanged) patch.title = newTitle;
       if (descriptionChanged) patch.description = newDescription;
+      if (tagsChanged) patch.tags = tags;
       promises.push(updateItem(item.id, patch));
     }
     if (riceChanged) {
@@ -181,6 +196,27 @@ export function EditItemModal({ item, onClose, onSaved, onError }: Props) {
               disabled={submitting}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 disabled:opacity-60"
             />
+          </div>
+
+          <div>
+            <label
+              htmlFor="edit-tags"
+              className="block text-sm font-medium text-slate-700"
+            >
+              Tags <span className="text-slate-400">(optional)</span>
+            </label>
+            <div className="mt-1">
+              <TagsInput
+                value={tags}
+                onChange={setTags}
+                disabled={submitting}
+                inputId="edit-tags"
+              />
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              Press Enter or comma to add. Max {MAX_TAGS_PER_ITEM} per item,{" "}
+              {MAX_TAG_LENGTH} chars each.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -297,6 +333,93 @@ export function EditItemModal({ item, onClose, onSaved, onError }: Props) {
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+// Pill-style tags editor. Type a tag and press Enter or comma to add as
+// a chip; click ×, or press Backspace on the empty input, to remove
+// the most recent chip. Normalisation (trim, case-insensitive dedupe,
+// length cap, count cap) matches the backend's _normalise_tags so we
+// never send anything the server would silently drop.
+function TagsInput({
+  value,
+  onChange,
+  disabled,
+  inputId,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+  disabled?: boolean;
+  inputId?: string;
+}) {
+  const [draft, setDraft] = useState("");
+
+  function tryAddTag(raw: string) {
+    const t = raw.trim();
+    if (!t) return;
+    if (t.length > MAX_TAG_LENGTH) return;
+    if (value.some((existing) => existing.toLowerCase() === t.toLowerCase()))
+      return;
+    if (value.length >= MAX_TAGS_PER_ITEM) return;
+    onChange([...value, t]);
+    setDraft("");
+  }
+
+  function removeTagAt(idx: number) {
+    onChange(value.filter((_, i) => i !== idx));
+  }
+
+  function onInputKeyDown(e: ReactKeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      tryAddTag(draft);
+    } else if (e.key === "Backspace" && draft === "" && value.length > 0) {
+      removeTagAt(value.length - 1);
+    }
+  }
+
+  return (
+    <div
+      className={`flex flex-wrap items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-2 py-1.5 focus-within:border-slate-500 focus-within:ring-1 focus-within:ring-slate-500 ${
+        disabled ? "opacity-60" : ""
+      }`}
+    >
+      {value.map((tag, idx) => (
+        <span
+          key={`${tag}-${idx}`}
+          className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700"
+        >
+          {tag}
+          <button
+            type="button"
+            onClick={() => removeTagAt(idx)}
+            disabled={disabled}
+            aria-label={`Remove tag ${tag}`}
+            className="rounded-full text-slate-400 hover:text-slate-700 disabled:cursor-not-allowed"
+          >
+            ×
+          </button>
+        </span>
+      ))}
+      <input
+        id={inputId}
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={onInputKeyDown}
+        onBlur={() => tryAddTag(draft)}
+        disabled={disabled || value.length >= MAX_TAGS_PER_ITEM}
+        placeholder={
+          value.length === 0
+            ? "Add tags (e.g. feature, infra)…"
+            : value.length >= MAX_TAGS_PER_ITEM
+              ? `Max ${MAX_TAGS_PER_ITEM} tags`
+              : ""
+        }
+        maxLength={MAX_TAG_LENGTH}
+        className="min-w-[120px] flex-1 bg-transparent text-sm placeholder:text-slate-400 focus:outline-none"
+      />
     </div>
   );
 }
