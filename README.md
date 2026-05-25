@@ -24,8 +24,8 @@ The board at a glance — filter bar, top-10 bar chart, and the table:
 
 <table>
   <tr>
-    <td width="50%"><strong>Effort × Score scatter</strong><br><sub>PM's classic 2×2 quadrant: Quick wins / Big bets / Fill-ins / Avoid</sub></td>
-    <td width="50%"><strong>Multiple workspaces</strong><br><sub>Each workspace holds a backlog and its RICE scoring</sub></td>
+    <td width="50%"><strong>Effort × Score scatter (RICE)</strong><br><sub>PM's classic 2×2 quadrant: Quick wins / Big bets / Fill-ins / Avoid</sub></td>
+    <td width="50%"><strong>Multiple workspaces, multiple frameworks</strong><br><sub>Each workspace picks its own scoring framework — RICE, ICE, Value × Effort, or MoSCoW</sub></td>
   </tr>
   <tr>
     <td><a href="./docs/screenshots/02-scatter-view.png"><img src="./docs/screenshots/02-scatter-view.png" alt="Effort × Score scatter plot"></a></td>
@@ -55,9 +55,9 @@ Product managers waste hours each sprint debating "what to build next" in spread
 
 **Frameboard is different:**
 
-- 🧮 **Multi-framework** — Compare the same backlog across RICE, ICE, MoSCoW, and Value-vs-Effort in one board
-- 👥 **Collaborative scoring** — Each teammate scores independently; see distribution and disagreement at a glance
-- 📤 **Export-first** — Push results to Jira, Linear, Notion, or CSV. No lock-in
+- 🧮 **Multi-framework** — Pick RICE, ICE, Value × Effort, or MoSCoW per workspace. Each board renders inputs, metric legend, and scoring formula tailored to the framework you picked
+- 🔐 **Sign in with GitHub** — NextAuth on the frontend, JWT-verified ownership checks on the backend. `AUTH_DISABLED=1` bypass for self-hosters who don't want OAuth
+- 📊 **PM-shaped visuals** — Top-N bar chart and Effort × Score scatter (Quick wins / Big bets / Fill-ins / Avoid) on RICE boards; URL-synced filters (`?q=…&status=…&effort=…&score=…&tag=…`) for sharing a working view
 - 🚀 **Self-hostable** — One Docker command. Your data stays yours
 
 ## Status
@@ -66,16 +66,16 @@ Alpha, built in the open. **Live and deployed** at [frameboard.pages.dev](https:
 
 | Layer | Status |
 |---|---|
-| Database schema | ✅ Users, workspaces, items, RICE scores |
+| Database schema | ✅ Users, workspaces, items, RICE scores, polymorphic `item_scores`, history log |
 | Backend API | ✅ Full CRUD + RICE/ICE/MoSCoW/ValueEffort scoring + item tags + history log (96 pytest tests) |
-| Frontend workspace list + board | ✅ Create, score, edit (modal + inline), delete, tag |
-| Visualization & filtering | ✅ Top-10 bars + Effort × Score scatter, search / status / effort / score / tag chips, URL-synced state |
-| Metric tooltips | ✅ Inline (i) on Reach / Impact / Confidence / Effort / Score |
+| Frontend workspace list + board | ✅ Create (with framework picker), score, edit (modal + inline for RICE), delete, tag |
+| Multi-framework scoring | ✅ Backend (`POST /v1/score`, `workspace.framework`, polymorphic `item_scores`) and frontend both shipped. Custom framework dropdown on the create modal; ICE / MoSCoW / Value × Effort each render a dedicated polymorphic board with framework-aware inputs, metric legend, (i) tooltips, and intro line |
+| Auth | ✅ GitHub OAuth via NextAuth.js + HS256 JWT verification on the backend. Floating user badge (avatar + email + Sign out) on every page. `AUTH_DISABLED=1` bypass for self-host / local dev |
+| Visualization & filtering | ✅ Top-10 bars + Effort × Score scatter (RICE), search / status / effort / score / tag chips, URL-synced state |
+| Metric tooltips | ✅ Inline (i) on every framework's metric legend (RICE / ICE / MoSCoW / Value × Effort) |
+| Self-host Docker image | ✅ `docker compose -f docker-compose.selfhost.yml up --build` brings up the full stack |
 | End-to-end test suite | ✅ 5 Playwright scenarios, green in CI |
 | Production deployment | ✅ Cloudflare Pages + Render + Neon |
-| Self-host Docker image | ✅ `docker compose -f docker-compose.selfhost.yml up --build` brings up the full stack |
-| Multi-framework scoring | 🚧 Backend shipped (`POST /v1/score`, `workspace.framework`, polymorphic `item_scores`); frontend selector ✅ ready, per-framework input forms in progress |
-| Auth | ✅ GitHub OAuth via NextAuth.js + HS256 JWT verification on the backend. `AUTH_DISABLED=1` bypass for self-host / local dev |
 
 ## Quick start
 
@@ -187,8 +187,8 @@ on the JWT's `email` claim.
 - [x] Self-host Docker image — `docker compose -f docker-compose.selfhost.yml up --build` brings up Postgres + API + Web
 - [x] Item tags / categories — JSON column on items, pill input in the edit modal, tag chip filter on the board (URL `?tag=`)
 - [x] Score history / change-log timeline per item — append-only `item_history` table records RICE changes and field edits; collapsible timeline in the edit modal
-- [~] ICE / MoSCoW / Value-vs-Effort frameworks — backend done: `workspace.framework` switch, polymorphic `item_scores` table, unified `POST /v1/score`, framework-aware board ordering. Frontend has the create-workspace framework selector; per-framework input forms in the edit modal still to come.
-- [x] Multi-user auth (NextAuth.js + JWT) — GitHub OAuth on the frontend, HS256 JWT verification on the backend with cross-user ownership checks on every endpoint. `AUTH_DISABLED=1` bypass for self-host / local dev (mirrored on both sides).
+- [x] ICE / MoSCoW / Value-vs-Effort frameworks — backend: `workspace.framework`, polymorphic `item_scores` table, unified `POST /v1/score`, framework-aware board ordering. Frontend: custom framework picker on the create-workspace modal, dedicated polymorphic board for non-RICE workspaces with per-framework inputs (1–10 sliders for ICE, V/E numeric pair for Value × Effort, Must/Should/Could/Won't select for MoSCoW), framework-aware metric legend, (i) tooltips, and an intro line per board.
+- [x] Multi-user auth (NextAuth.js + JWT) — GitHub OAuth on the frontend, HS256 JWT verification on the backend with cross-user ownership checks on every endpoint. Floating user badge on every page (avatar + email + Sign out). `AUTH_DISABLED=1` bypass for self-host / local dev (mirrored on both sides).
 - [ ] Collaborative scoring with disagreement visualization
 - [ ] Jira / Linear / Notion export
 
