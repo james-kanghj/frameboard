@@ -112,10 +112,10 @@ See [docs/SETUP.md](docs/SETUP.md) for the full guide, including notes on port c
 - [x] CI pipeline (web + api + e2e jobs)
 - [x] Public hosted instance ([frameboard.pages.dev](https://frameboard.pages.dev))
 - [x] Score distribution chart (top-N horizontal bars above the table)
-- [ ] Effort × Score scatter plot (PM-style 2×2 quadrant)
+- [x] Effort × Score scatter plot (PM-style 2×2 quadrant, tab-toggled with the bar chart)
+- [x] Board search — title + description, with URL state (`?q=`)
+- [x] Board status filter — All / Scored / Unscored segmented toggle (URL `?status=`)
 - [ ] Score history / change-log timeline per item
-- [ ] Board search — title + description, with URL state (`?q=`)
-- [ ] Board status filter — All / Scored / Unscored segmented toggle
 - [ ] Board quick-wins filter — effort threshold + score-range chips
 - [ ] Item tags / categories — schema addition + tag filter UI
 - [ ] ICE / MoSCoW / Value-vs-Effort frameworks
