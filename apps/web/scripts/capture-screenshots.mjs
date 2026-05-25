@@ -38,6 +38,28 @@ const shots = [
     url: `${BASE}/workspaces/${WS_Q2}?q=integration`,
     viewport: { width: 1280, height: 900 },
   },
+  {
+    name: "05-filter-buckets",
+    // Effort + Score chip filters active — narrows 25 items to the
+    // single "Quick & high-score" winner (Ship dark mode).
+    url: `${BASE}/workspaces/${WS_Q2}?effort=quick&score=high`,
+    viewport: { width: 1280, height: 720 },
+  },
+  {
+    name: "06-tooltip-impact",
+    url: `${BASE}/workspaces/${WS_Q2}?view=scatter`,
+    viewport: { width: 1280, height: 900 },
+    // Open the Impact (i) tooltip so the 0.25→3 scale is visible in
+    // the screenshot. Scatter view is used because it's shorter
+    // vertically than the bars view, keeping the legend in frame.
+    afterLoad: async (page) => {
+      await page
+        .getByRole("button", { name: "Impact — more info" })
+        .first()
+        .hover();
+      await page.waitForTimeout(400);
+    },
+  },
 ];
 
 await mkdir(OUT_DIR, { recursive: true });
@@ -54,6 +76,9 @@ try {
     await page.goto(shot.url, { waitUntil: "networkidle", timeout: 60_000 });
     // Small delay so any client-side hydration / chart layout settles.
     await page.waitForTimeout(600);
+    if (shot.afterLoad) {
+      await shot.afterLoad(page);
+    }
     const outPath = path.join(OUT_DIR, `${shot.name}.png`);
     await page.screenshot({ path: outPath, fullPage: false });
     console.log(`✓ ${shot.name}.png`);

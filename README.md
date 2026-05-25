@@ -32,7 +32,15 @@ The board at a glance — filter bar, top-10 bar chart, and the table:
     <td><a href="./docs/screenshots/03-workspaces-list.png"><img src="./docs/screenshots/03-workspaces-list.png" alt="Workspaces list"></a></td>
   </tr>
   <tr>
-    <td colspan="2"><strong>Live filtering — search + status with URL state</strong><br><sub>e.g. <code>?q=integration&status=scored&view=scatter</code> survives refresh and is shareable</sub></td>
+    <td width="50%"><strong>Effort / Score bucket chips</strong><br><sub>Quick (≤3) + High (&gt;1000) narrows 25 items to the one standout</sub></td>
+    <td width="50%"><strong>Inline (i) tooltips on every metric</strong><br><sub>Hover, focus, or tap for the RICE-specific scale (0.25 → 3 etc.)</sub></td>
+  </tr>
+  <tr>
+    <td><a href="./docs/screenshots/05-filter-buckets.png"><img src="./docs/screenshots/05-filter-buckets.png" alt="Bucket filter chips active"></a></td>
+    <td><a href="./docs/screenshots/06-tooltip-impact.png"><img src="./docs/screenshots/06-tooltip-impact.png" alt="Impact tooltip showing the 5-point RICE scale"></a></td>
+  </tr>
+  <tr>
+    <td colspan="2"><strong>Live text search — title + description with URL state</strong><br><sub>e.g. <code>?q=integration&status=scored&view=scatter</code> survives refresh and is shareable</sub></td>
   </tr>
   <tr>
     <td colspan="2"><a href="./docs/screenshots/04-filter-search.png"><img src="./docs/screenshots/04-filter-search.png" alt="Live filter narrowing 25 items to one match"></a></td>
@@ -61,10 +69,12 @@ Alpha, built in the open. **Live and deployed** at [frameboard.pages.dev](https:
 | Database schema | ✅ Users, workspaces, items, RICE scores |
 | Backend API | ✅ Full CRUD + RICE upsert (44 pytest tests) |
 | Frontend workspace list + board | ✅ Create, score, edit (modal + inline), delete |
+| Visualization & filtering | ✅ Top-10 bars + Effort × Score scatter, search / status / effort / score chips, URL-synced state |
+| Metric tooltips | ✅ Inline (i) on Reach / Impact / Confidence / Effort / Score |
 | End-to-end test suite | ✅ 5 Playwright scenarios, green in CI |
 | Production deployment | ✅ Cloudflare Pages + Render + Neon |
+| Self-host Docker image | ✅ `docker compose -f docker-compose.selfhost.yml up --build` brings up the full stack |
 | Auth | ⏳ Single-user hardcoded for MVP |
-| Self-host Docker image | ⏳ Planned |
 | Multi-framework (ICE / MoSCoW / Kano) | ⏳ RICE only for now |
 
 ## Quick start
