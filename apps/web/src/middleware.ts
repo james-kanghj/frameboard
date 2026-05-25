@@ -18,10 +18,18 @@ export async function middleware(req: NextRequest) {
   if (AUTH_DISABLED) {
     return NextResponse.next();
   }
-  const session = await auth();
+  // A stale cookie signed with a previous NEXTAUTH_SECRET makes Auth.js
+  // throw JWTSessionError. Treat any decode failure as "no session" so
+  // the user is bounced to /auth/signin (where they can re-authenticate)
+  // instead of seeing a 500 dev overlay.
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    session = null;
+  }
   if (!session?.user?.email) {
     const signInUrl = new URL("/auth/signin", req.url);
-    // Preserve where the user was headed so we can bounce back.
     signInUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(signInUrl);
   }

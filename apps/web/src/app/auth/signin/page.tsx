@@ -14,8 +14,16 @@ export default async function SignInPage({ searchParams }: Props) {
   const params = await searchParams;
   const callbackUrl = params.callbackUrl ?? "/workspaces";
 
-  // Already signed in? Just bounce.
-  const session = await auth();
+  // Already signed in? Just bounce. A stale / wrong-secret cookie can
+  // make Auth.js throw `JWTSessionError` instead of returning null —
+  // catch and treat as "not signed in" so the page still renders and
+  // the user can re-authenticate.
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    session = null;
+  }
   if (session?.user?.email) {
     redirect(callbackUrl);
   }
