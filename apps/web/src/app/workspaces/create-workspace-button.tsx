@@ -1,17 +1,26 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { Framework } from "@frameboard/shared";
 
 import { createWorkspace } from "@/lib/api";
 
-const FRAMEWORK_OPTIONS: { value: Framework; label: string }[] = [
-  { value: "RICE", label: "RICE — Reach × Impact × Confidence ÷ Effort" },
-  { value: "ICE", label: "ICE — Impact × Confidence × Ease" },
-  { value: "ValueEffort", label: "Value × Effort — Value ÷ Effort" },
-  { value: "MoSCoW", label: "MoSCoW — Must / Should / Could / Won't" },
+interface FrameworkOption {
+  value: Framework;
+  label: string;
+  formula: string;
+}
+
+// The framework selector renders a custom dropdown rather than a native
+// <select> so the option list inherits the modal's styling (light surface,
+// rounded corners, hover states) instead of the browser's OS-themed menu.
+const FRAMEWORK_OPTIONS: FrameworkOption[] = [
+  { value: "RICE", label: "RICE", formula: "Reach × Impact × Confidence ÷ Effort" },
+  { value: "ICE", label: "ICE", formula: "Impact × Confidence × Ease" },
+  { value: "ValueEffort", label: "Value × Effort", formula: "Value ÷ Effort" },
+  { value: "MoSCoW", label: "MoSCoW", formula: "Must / Should / Could / Won't" },
 ];
 
 export function CreateWorkspaceButton() {
@@ -28,6 +37,175 @@ export function CreateWorkspaceButton() {
       </button>
       {open && <CreateWorkspaceModal onClose={() => setOpen(false)} />}
     </>
+  );
+}
+
+// Custom listbox-style framework picker. Button trigger that shows the
+// active label + formula; click reveals a panel of all four options.
+// Keyboard support: ArrowUp/Down to move, Enter/Space to select, Escape
+// to close. No portal needed — the panel lives inside the modal so the
+// modal's stacking context already lifts it above page content.
+function FrameworkSelect({
+  value,
+  onChange,
+  disabled,
+  inputId,
+}: {
+  value: Framework;
+  onChange: (next: Framework) => void;
+  disabled?: boolean;
+  inputId?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState<number>(() =>
+    FRAMEWORK_OPTIONS.findIndex((o) => o.value === value),
+  );
+  const rootRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const selected =
+    FRAMEWORK_OPTIONS.find((o) => o.value === value) ?? FRAMEWORK_OPTIONS[0];
+
+  // Close on outside click + Escape. Listeners only attach while open
+  // to keep the global event surface minimal.
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: PointerEvent) {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  function commit(next: Framework) {
+    onChange(next);
+    setOpen(false);
+    buttonRef.current?.focus();
+  }
+
+  function onTriggerKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setOpen(true);
+      setActiveIndex(FRAMEWORK_OPTIONS.findIndex((o) => o.value === value));
+    }
+  }
+
+  function onListKeyDown(e: React.KeyboardEvent<HTMLUListElement>) {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => (i + 1) % FRAMEWORK_OPTIONS.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) =>
+        i <= 0 ? FRAMEWORK_OPTIONS.length - 1 : i - 1,
+      );
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      const opt = FRAMEWORK_OPTIONS[activeIndex];
+      if (opt) commit(opt.value);
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      setActiveIndex(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      setActiveIndex(FRAMEWORK_OPTIONS.length - 1);
+    }
+  }
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        ref={buttonRef}
+        id={inputId}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        disabled={disabled}
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={onTriggerKeyDown}
+        className="flex w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 disabled:opacity-60"
+      >
+        <span className="flex min-w-0 items-baseline gap-2">
+          <span className="font-medium text-slate-900">{selected.label}</span>
+          <span className="truncate text-xs text-slate-500">
+            {selected.formula}
+          </span>
+        </span>
+        <svg
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          aria-hidden="true"
+          className={`shrink-0 text-slate-400 transition ${open ? "rotate-180" : ""}`}
+        >
+          <path
+            d="M4 6l4 4 4-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {open && (
+        <ul
+          role="listbox"
+          aria-activedescendant={`framework-opt-${activeIndex}`}
+          tabIndex={-1}
+          autoFocus
+          onKeyDown={onListKeyDown}
+          // Focus the list synchronously on open so arrow keys work.
+          ref={(el) => el?.focus()}
+          className="absolute left-0 right-0 z-10 mt-1 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg focus:outline-none"
+        >
+          {FRAMEWORK_OPTIONS.map((opt, idx) => {
+            const isSelected = opt.value === value;
+            const isActive = idx === activeIndex;
+            return (
+              <li
+                id={`framework-opt-${idx}`}
+                key={opt.value}
+                role="option"
+                aria-selected={isSelected}
+                onMouseEnter={() => setActiveIndex(idx)}
+                onClick={() => commit(opt.value)}
+                className={`flex cursor-pointer items-baseline gap-2 px-3 py-2 text-sm ${
+                  isActive ? "bg-slate-100" : "bg-white"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`w-3 shrink-0 text-slate-500 ${isSelected ? "" : "invisible"}`}
+                >
+                  ✓
+                </span>
+                <span className="flex min-w-0 flex-1 items-baseline gap-2">
+                  <span className="font-medium text-slate-900">{opt.label}</span>
+                  <span className="truncate text-xs text-slate-500">
+                    {opt.formula}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -114,19 +292,14 @@ function CreateWorkspaceModal({ onClose }: { onClose: () => void }) {
             >
               Framework
             </label>
-            <select
-              id="workspace-framework"
-              value={framework}
-              onChange={(e) => setFramework(e.target.value as Framework)}
-              disabled={submitting}
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 disabled:opacity-60"
-            >
-              {FRAMEWORK_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+            <div className="mt-1">
+              <FrameworkSelect
+                value={framework}
+                onChange={setFramework}
+                disabled={submitting}
+                inputId="workspace-framework"
+              />
+            </div>
             <p className="mt-1 text-xs text-slate-500">
               Determines the scoring inputs and how the board sorts. Can be
               changed later from the workspace.
