@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -33,6 +34,14 @@ app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(prioritization.router, prefix="/v1", tags=["prioritization"])
 app.include_router(workspaces.router, prefix="/v1", tags=["workspaces"])
 app.include_router(items.router, prefix="/v1", tags=["items"])
+
+# Test-only routes — gated behind an env var so they can never be mounted
+# accidentally in production. The e2e suite sets FRAMEBOARD_TEST_MODE=1
+# when starting uvicorn; otherwise the /v1/_test/* routes return 404.
+if os.environ.get("FRAMEBOARD_TEST_MODE") == "1":
+    from app.api import test_utils
+
+    app.include_router(test_utils.router, prefix="/v1", tags=["test-only"])
 
 
 @app.get("/")

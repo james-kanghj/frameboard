@@ -195,7 +195,7 @@ export function EditItemModal({ item, onClose, onSaved, onError }: Props) {
                 id="edit-reach"
                 type="number"
                 min={0}
-                step={1}
+                step="any"
                 value={reach}
                 onChange={(e) => setReach(e.target.value)}
                 disabled={submitting}
@@ -232,7 +232,7 @@ export function EditItemModal({ item, onClose, onSaved, onError }: Props) {
                 type="number"
                 min={0}
                 max={1}
-                step={0.1}
+                step="any"
                 value={confidence}
                 onChange={(e) => setConfidence(e.target.value)}
                 disabled={submitting}
@@ -252,7 +252,7 @@ export function EditItemModal({ item, onClose, onSaved, onError }: Props) {
                 id="edit-effort"
                 type="number"
                 min={0.01}
-                step={0.1}
+                step="any"
                 value={effort}
                 onChange={(e) => setEffort(e.target.value)}
                 disabled={submitting}
