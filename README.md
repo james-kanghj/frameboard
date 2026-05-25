@@ -67,15 +67,15 @@ Alpha, built in the open. **Live and deployed** at [frameboard.pages.dev](https:
 | Layer | Status |
 |---|---|
 | Database schema | ✅ Users, workspaces, items, RICE scores |
-| Backend API | ✅ Full CRUD + RICE upsert + item tags + history log (56 pytest tests) |
+| Backend API | ✅ Full CRUD + RICE/ICE/MoSCoW/ValueEffort scoring + item tags + history log (85 pytest tests) |
 | Frontend workspace list + board | ✅ Create, score, edit (modal + inline), delete, tag |
 | Visualization & filtering | ✅ Top-10 bars + Effort × Score scatter, search / status / effort / score / tag chips, URL-synced state |
 | Metric tooltips | ✅ Inline (i) on Reach / Impact / Confidence / Effort / Score |
 | End-to-end test suite | ✅ 5 Playwright scenarios, green in CI |
 | Production deployment | ✅ Cloudflare Pages + Render + Neon |
 | Self-host Docker image | ✅ `docker compose -f docker-compose.selfhost.yml up --build` brings up the full stack |
+| Multi-framework scoring | 🚧 Backend shipped (`POST /v1/score`, `workspace.framework`, polymorphic `item_scores`); frontend selector + per-framework UI in progress |
 | Auth | ⏳ Single-user hardcoded for MVP |
-| Multi-framework (ICE / MoSCoW / Kano) | ⏳ RICE only for now |
 
 ## Quick start
 
@@ -140,7 +140,7 @@ Brings up Postgres (`:5433`), the FastAPI backend (`:8001`), and the Next.js fro
 | Backend  | FastAPI, Python 3.12+, SQLAlchemy 2.0, Alembic             |
 | Database | PostgreSQL 16 (Dockerized, port `5433` to avoid conflicts) |
 | Monorepo | pnpm workspaces + Turborepo                                |
-| Testing  | pytest (56 tests, backend), Playwright (5 e2e scenarios)   |
+| Testing  | pytest (85 tests, backend), Playwright (5 e2e scenarios)   |
 | Deploy   | Cloudflare Pages (frontend) + Render (backend) + Neon (DB) |
 | CI       | GitHub Actions — web, api, e2e jobs all gated on PRs       |
 
@@ -165,7 +165,7 @@ Brings up Postgres (`:5433`), the FastAPI backend (`:8001`), and the Next.js fro
 - [x] Self-host Docker image — `docker compose -f docker-compose.selfhost.yml up --build` brings up Postgres + API + Web
 - [x] Item tags / categories — JSON column on items, pill input in the edit modal, tag chip filter on the board (URL `?tag=`)
 - [x] Score history / change-log timeline per item — append-only `item_history` table records RICE changes and field edits; collapsible timeline in the edit modal
-- [ ] ICE / MoSCoW / Value-vs-Effort frameworks
+- [~] ICE / MoSCoW / Value-vs-Effort frameworks — backend done: `workspace.framework` switch, polymorphic `item_scores` table, unified `POST /v1/score`, framework-aware board ordering. Frontend selector + per-framework input forms next.
 - [ ] Collaborative scoring with disagreement visualization
 - [ ] Jira / Linear / Notion export
 - [ ] Multi-user auth (NextAuth.js + JWT)
