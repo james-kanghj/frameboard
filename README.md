@@ -114,6 +114,10 @@ See [docs/SETUP.md](docs/SETUP.md) for the full guide, including notes on port c
 - [x] Score distribution chart (top-N horizontal bars above the table)
 - [ ] Effort × Score scatter plot (PM-style 2×2 quadrant)
 - [ ] Score history / change-log timeline per item
+- [ ] Board search — title + description, with URL state (`?q=`)
+- [ ] Board status filter — All / Scored / Unscored segmented toggle
+- [ ] Board quick-wins filter — effort threshold + score-range chips
+- [ ] Item tags / categories — schema addition + tag filter UI
 - [ ] ICE / MoSCoW / Value-vs-Effort frameworks
 - [ ] Collaborative scoring with disagreement visualization
 - [ ] Jira / Linear / Notion export
