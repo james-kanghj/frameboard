@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -34,9 +35,13 @@ interface Toast {
 }
 type ToastPusher = (tone: ToastTone, message: string) => void;
 type ItemsSetter = Dispatch<SetStateAction<BacklogItem[]>>;
+type FilterStatus = "all" | "scored" | "unscored";
+type ChartView = "bars" | "scatter";
 
 export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [items, setItems] = useState(initialItems);
   const [addOpen, setAddOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<BacklogItem | null>(null);
@@ -47,10 +52,64 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
     setItems(initialItems);
   }, [initialItems]);
 
+  // Filter + chart-view state synced to URL so refreshes and shared links
+  // preserve the working context. Each setter writes via router.replace
+  // with scroll:false so the page doesn't jump.
+  const search = searchParams.get("q") ?? "";
+  const statusParam = searchParams.get("status");
+  const status: FilterStatus =
+    statusParam === "scored" || statusParam === "unscored"
+      ? statusParam
+      : "all";
+  const viewParam = searchParams.get("view");
+  const view: ChartView = viewParam === "scatter" ? "scatter" : "bars";
+
+  const setQueryParam = useCallback(
+    (key: string, value: string, defaultValue: string) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (!value || value === defaultValue) {
+        next.delete(key);
+      } else {
+        next.set(key, value);
+      }
+      const qs = next.toString();
+      router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+    },
+    [searchParams, router, pathname],
+  );
+
+  const clearFilters = useCallback(() => {
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("q");
+    next.delete("status");
+    const qs = next.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+  }, [searchParams, router, pathname]);
+
   // Derived view: re-sort by score so optimistic score updates re-rank rows
   // live, without waiting for a router.refresh round-trip. Mirrors the
   // server's board ordering: score DESC (nulls last), then created_at ASC.
   const sortedItems = useMemo(() => sortByScore(items), [items]);
+
+  const filteredItems = useMemo(() => {
+    let result = sortedItems;
+    const q = search.trim().toLowerCase();
+    if (q) {
+      result = result.filter(
+        (it) =>
+          it.title.toLowerCase().includes(q) ||
+          (it.description?.toLowerCase().includes(q) ?? false),
+      );
+    }
+    if (status === "scored") {
+      result = result.filter((it) => it.riceScore !== null);
+    } else if (status === "unscored") {
+      result = result.filter((it) => it.riceScore === null);
+    }
+    return result;
+  }, [sortedItems, search, status]);
+
+  const filterActive = search.trim().length > 0 || status !== "all";
 
   const pushToast: ToastPusher = (tone, message) => {
     const id = Date.now() + Math.random();
@@ -69,7 +128,9 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
             {workspaceName}
           </h1>
           <p className="text-sm text-slate-500">
-            {items.length} {items.length === 1 ? "item" : "items"}
+            {filterActive
+              ? `${filteredItems.length} of ${items.length} items`
+              : `${items.length} ${items.length === 1 ? "item" : "items"}`}
           </p>
         </div>
         <button
@@ -86,15 +147,31 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
           <EmptyState onAdd={() => setAddOpen(true)} />
         ) : (
           <div className="space-y-4">
-            <ScoreDistribution items={sortedItems} />
-            <MetricLegend />
-            <BoardTable
-              items={sortedItems}
-              setItems={setItems}
-              pushToast={pushToast}
-              refresh={() => router.refresh()}
-              onEditItem={setEditingItem}
+            <FilterBar
+              search={search}
+              status={status}
+              onSearchChange={(v) => setQueryParam("q", v, "")}
+              onStatusChange={(v) => setQueryParam("status", v, "all")}
+              onClear={clearFilters}
+              filterActive={filterActive}
             />
+            <ChartView
+              items={filteredItems}
+              view={view}
+              onViewChange={(v) => setQueryParam("view", v, "bars")}
+            />
+            <MetricLegend />
+            {filteredItems.length === 0 ? (
+              <NoMatchesState onClear={clearFilters} />
+            ) : (
+              <BoardTable
+                items={filteredItems}
+                setItems={setItems}
+                pushToast={pushToast}
+                refresh={() => router.refresh()}
+                onEditItem={setEditingItem}
+              />
+            )}
           </div>
         )}
       </div>
@@ -129,35 +206,194 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
   );
 }
 
-// ──────────────────────────────────────────────────────── Score distribution ──
+// ──────────────────────────────────────────────────────────────── Filter bar ──
 
-// Horizontal bar chart of the top-N scored items. Gives the board a
-// visual hierarchy at a glance — table alone is hard to scan once item
-// count climbs past ~10. Pure CSS/SVG, no chart library, so the edge
-// runtime bundle stays small.
-function ScoreDistribution({ items }: { items: BacklogItem[] }) {
-  // Items come pre-sorted by score DESC; just filter for scored and slice.
+// Search input + segmented status toggle. Both update URL state so the
+// PM's working view (e.g. "show me only unscored matching 'auth'") can
+// be shared as a link or survives a refresh.
+function FilterBar({
+  search,
+  status,
+  onSearchChange,
+  onStatusChange,
+  onClear,
+  filterActive,
+}: {
+  search: string;
+  status: FilterStatus;
+  onSearchChange: (value: string) => void;
+  onStatusChange: (value: FilterStatus) => void;
+  onClear: () => void;
+  filterActive: boolean;
+}) {
+  const statusOptions: { value: FilterStatus; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "scored", label: "Scored" },
+    { value: "unscored", label: "Unscored" },
+  ];
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-1 items-center gap-2">
+        <div className="relative flex-1 sm:max-w-md">
+          <svg
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+            <path
+              d="M10.5 10.5L14 14"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search title or description…"
+            className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            aria-label="Search items"
+          />
+        </div>
+        <div
+          role="group"
+          aria-label="Filter by status"
+          className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5"
+        >
+          {statusOptions.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              aria-pressed={status === opt.value}
+              onClick={() => onStatusChange(opt.value)}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition ${
+                status === opt.value
+                  ? "bg-slate-900 text-white"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {filterActive && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="self-start rounded-md px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-700 sm:self-auto"
+        >
+          Clear filters
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────── No matches ──
+
+function NoMatchesState({ onClear }: { onClear: () => void }) {
+  return (
+    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-12 text-center">
+      <h2 className="text-lg font-semibold text-slate-900">No matches</h2>
+      <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">
+        No items match the current filters. Try a different search term or
+        change the status filter.
+      </p>
+      <button
+        type="button"
+        onClick={onClear}
+        className="mt-6 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+      >
+        Clear filters
+      </button>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────── Chart view ──
+
+// Wraps the two visualizations under one card with a Bars/Scatter tab
+// toggle. Both views share the (already filter-applied) items prop so
+// filtering and charting stay in sync.
+function ChartView({
+  items,
+  view,
+  onViewChange,
+}: {
+  items: BacklogItem[];
+  view: ChartView;
+  onViewChange: (next: ChartView) => void;
+}) {
+  const scoredCount = items.filter((it) => it.riceScore !== null).length;
+  if (scoredCount < 2) return null;
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          {view === "bars" ? `Top ${Math.min(10, scoredCount)} by score` : "Effort × Score"}
+        </h2>
+        <div
+          role="group"
+          aria-label="Chart view"
+          className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-0.5"
+        >
+          <ChartTab
+            label="Bars"
+            active={view === "bars"}
+            onClick={() => onViewChange("bars")}
+          />
+          <ChartTab
+            label="Scatter"
+            active={view === "scatter"}
+            onClick={() => onViewChange("scatter")}
+          />
+        </div>
+      </div>
+      {view === "bars" ? <BarsView items={items} /> : <ScatterView items={items} />}
+    </div>
+  );
+}
+
+function ChartTab({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`rounded px-2 py-1 text-xs font-medium transition ${
+        active ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+// Top-N horizontal bars. Extracted from the previous ScoreDistribution.
+function BarsView({ items }: { items: BacklogItem[] }) {
   const scored = items.filter((it) => it.riceScore !== null).slice(0, 10);
-  if (scored.length < 2) return null;
-
   const maxScore = scored[0]?.riceScore?.score ?? 0;
   if (maxScore <= 0) return null;
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
-      <div className="mb-4 flex items-baseline justify-between gap-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-          Top {scored.length} by score
-        </h2>
-        <span className="text-xs text-slate-500">
-          of {items.length} {items.length === 1 ? "item" : "items"}
-        </span>
-      </div>
-      <ol className="space-y-2">
-        {scored.map((item, idx) => {
-          const score = item.riceScore?.score ?? 0;
-          // Floor at 2% so even very low scores show a visible sliver.
-          const widthPct = Math.max(2, (score / maxScore) * 100);
+    <ol className="space-y-2">
+      {scored.map((item, idx) => {
+        const score = item.riceScore?.score ?? 0;
+        // Floor at 2% so even very low scores show a visible sliver.
+        const widthPct = Math.max(2, (score / maxScore) * 100);
           return (
             <li key={item.id} className="flex items-center gap-3 text-sm">
               <span className="w-5 shrink-0 text-right tabular-nums text-slate-400">
@@ -185,8 +421,206 @@ function ScoreDistribution({ items }: { items: BacklogItem[] }) {
             </li>
           );
         })}
-      </ol>
-    </div>
+    </ol>
+  );
+}
+
+// PM's classic 2×2: Effort (X axis, low → high) vs Score (Y axis, low →
+// high). Dashed median lines split the plot into Quick wins (top-left),
+// Big bets (top-right), Fill-ins (bottom-left), Avoid (bottom-right).
+// Pure SVG, native <title> tooltip on each dot — no chart library.
+function ScatterView({ items }: { items: BacklogItem[] }) {
+  const scored = items.filter((it) => it.riceScore !== null);
+  if (scored.length < 2) return null;
+
+  const efforts = scored.map((it) => it.riceScore!.effort);
+  const scores = scored.map((it) => it.riceScore!.score);
+  const minEffort = Math.min(...efforts);
+  const maxEffort = Math.max(...efforts);
+  const minScore = Math.min(...scores);
+  const maxScore = Math.max(...scores);
+  const median = (arr: number[]) => {
+    const s = [...arr].sort((a, b) => a - b);
+    return s[Math.floor(s.length / 2)] ?? 0;
+  };
+  const medEffort = median(efforts);
+  const medScore = median(scores);
+
+  const WIDTH = 640;
+  const HEIGHT = 400;
+  const PAD_L = 56;
+  const PAD_R = 24;
+  const PAD_T = 24;
+  const PAD_B = 44;
+
+  const xRange = maxEffort - minEffort || 1;
+  const yRange = maxScore - minScore || 1;
+  const x = (e: number) =>
+    PAD_L + ((e - minEffort) / xRange) * (WIDTH - PAD_L - PAD_R);
+  const y = (s: number) =>
+    HEIGHT - PAD_B - ((s - minScore) / yRange) * (HEIGHT - PAD_T - PAD_B);
+
+  return (
+    <svg
+      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+      className="h-auto w-full"
+      role="img"
+      aria-label="Effort versus Score scatter plot"
+    >
+      {/* Plot area border */}
+      <rect
+        x={PAD_L}
+        y={PAD_T}
+        width={WIDTH - PAD_L - PAD_R}
+        height={HEIGHT - PAD_T - PAD_B}
+        fill="none"
+        stroke="rgb(226 232 240)"
+        strokeWidth="1"
+      />
+
+      {/* Median lines — split into quadrants */}
+      <line
+        x1={x(medEffort)}
+        y1={PAD_T}
+        x2={x(medEffort)}
+        y2={HEIGHT - PAD_B}
+        stroke="rgb(203 213 225)"
+        strokeWidth="1"
+        strokeDasharray="4 4"
+      />
+      <line
+        x1={PAD_L}
+        y1={y(medScore)}
+        x2={WIDTH - PAD_R}
+        y2={y(medScore)}
+        stroke="rgb(203 213 225)"
+        strokeWidth="1"
+        strokeDasharray="4 4"
+      />
+
+      {/* Quadrant labels */}
+      <text
+        x={PAD_L + 8}
+        y={PAD_T + 16}
+        fontSize="11"
+        fill="rgb(100 116 139)"
+        className="select-none"
+      >
+        Quick wins
+      </text>
+      <text
+        x={WIDTH - PAD_R - 8}
+        y={PAD_T + 16}
+        textAnchor="end"
+        fontSize="11"
+        fill="rgb(100 116 139)"
+        className="select-none"
+      >
+        Big bets
+      </text>
+      <text
+        x={PAD_L + 8}
+        y={HEIGHT - PAD_B - 6}
+        fontSize="11"
+        fill="rgb(100 116 139)"
+        className="select-none"
+      >
+        Fill-ins
+      </text>
+      <text
+        x={WIDTH - PAD_R - 8}
+        y={HEIGHT - PAD_B - 6}
+        textAnchor="end"
+        fontSize="11"
+        fill="rgb(100 116 139)"
+        className="select-none"
+      >
+        Avoid
+      </text>
+
+      {/* Axis labels */}
+      <text
+        x={(WIDTH + PAD_L - PAD_R) / 2}
+        y={HEIGHT - 12}
+        textAnchor="middle"
+        fontSize="11"
+        fill="rgb(71 85 105)"
+        className="select-none"
+      >
+        Effort (person-months) →
+      </text>
+      <text
+        x={16}
+        y={(HEIGHT + PAD_T - PAD_B) / 2}
+        fontSize="11"
+        fill="rgb(71 85 105)"
+        textAnchor="middle"
+        transform={`rotate(-90 16 ${(HEIGHT + PAD_T - PAD_B) / 2})`}
+        className="select-none"
+      >
+        Score →
+      </text>
+
+      {/* Axis tick marks (min/max) */}
+      <text
+        x={PAD_L}
+        y={HEIGHT - PAD_B + 16}
+        textAnchor="middle"
+        fontSize="10"
+        fill="rgb(148 163 184)"
+      >
+        {minEffort}
+      </text>
+      <text
+        x={WIDTH - PAD_R}
+        y={HEIGHT - PAD_B + 16}
+        textAnchor="middle"
+        fontSize="10"
+        fill="rgb(148 163 184)"
+      >
+        {maxEffort}
+      </text>
+      <text
+        x={PAD_L - 8}
+        y={HEIGHT - PAD_B + 4}
+        textAnchor="end"
+        fontSize="10"
+        fill="rgb(148 163 184)"
+      >
+        {minScore.toFixed(0)}
+      </text>
+      <text
+        x={PAD_L - 8}
+        y={PAD_T + 10}
+        textAnchor="end"
+        fontSize="10"
+        fill="rgb(148 163 184)"
+      >
+        {maxScore.toFixed(0)}
+      </text>
+
+      {/* Dots */}
+      {scored.map((item) => {
+        const rs = item.riceScore!;
+        return (
+          <circle
+            key={item.id}
+            cx={x(rs.effort)}
+            cy={y(rs.score)}
+            r="5"
+            fill="rgb(15 23 42)"
+            fillOpacity="0.7"
+            stroke="white"
+            strokeWidth="1.5"
+          >
+            <title>
+              {item.title}
+              {"\n"}Effort: {rs.effort} · Score: {rs.score.toFixed(2)}
+            </title>
+          </circle>
+        );
+      })}
+    </svg>
   );
 }
 
