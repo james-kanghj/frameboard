@@ -185,3 +185,118 @@ def test_delete_item(client, workspace_id):
 def test_delete_item_404(client):
     response = client.delete(f"/v1/items/{NIL_UUID}")
     assert response.status_code == 404
+
+
+def test_item_starts_uncompleted(client, workspace_id):
+    response = client.post(
+        f"/v1/workspaces/{workspace_id}/items", json={"title": "Fresh item"}
+    )
+    assert response.status_code == 201
+    assert response.json()["completed_at"] is None
+
+
+def test_mark_item_completed(client, workspace_id):
+    create = client.post(
+        f"/v1/workspaces/{workspace_id}/items", json={"title": "Ship me"}
+    )
+    item_id = create.json()["id"]
+    response = client.patch(
+        f"/v1/items/{item_id}",
+        json={"completed_at": "2026-05-26T01:00:00+00:00"},
+    )
+    assert response.status_code == 200
+    completed = response.json()["completed_at"]
+    # Pydantic strips the timezone for naive serialization; the round
+    # trip preserves the wall-clock time, which is what we care about.
+    assert completed is not None
+    assert completed.startswith("2026-05-26T01:00:00")
+
+
+def test_unmark_item_with_explicit_null(client, workspace_id):
+    create = client.post(
+        f"/v1/workspaces/{workspace_id}/items", json={"title": "Reopen me"}
+    )
+    item_id = create.json()["id"]
+    client.patch(
+        f"/v1/items/{item_id}",
+        json={"completed_at": "2026-05-26T01:00:00+00:00"},
+    )
+    response = client.patch(
+        f"/v1/items/{item_id}", json={"completed_at": None}
+    )
+    assert response.status_code == 200
+    assert response.json()["completed_at"] is None
+
+
+def test_completed_items_sink_to_bottom_of_board(client, workspace_id):
+    """Board ordering: completed items follow open ones, regardless of
+    score. Two items scored, then the higher-scored one is completed —
+    it should drop below the lower-scored open one."""
+    high = client.post(
+        f"/v1/workspaces/{workspace_id}/items", json={"title": "High score"}
+    ).json()
+    low = client.post(
+        f"/v1/workspaces/{workspace_id}/items", json={"title": "Low score"}
+    ).json()
+    client.post(
+        "/v1/score/rice",
+        json={
+            "item_id": high["id"],
+            "reach": 1000,
+            "impact": 2,
+            "confidence": 1,
+            "effort": 1,
+        },
+    )
+    client.post(
+        "/v1/score/rice",
+        json={
+            "item_id": low["id"],
+            "reach": 100,
+            "impact": 1,
+            "confidence": 1,
+            "effort": 1,
+        },
+    )
+    # Sanity: high before low on the open board.
+    titles = [
+        it["title"]
+        for it in client.get(f"/v1/workspaces/{workspace_id}/board").json()
+    ]
+    assert titles == ["High score", "Low score"]
+
+    # Mark the higher one completed → it sinks past the lower one.
+    client.patch(
+        f"/v1/items/{high['id']}",
+        json={"completed_at": "2026-05-26T01:00:00+00:00"},
+    )
+    titles = [
+        it["title"]
+        for it in client.get(f"/v1/workspaces/{workspace_id}/board").json()
+    ]
+    assert titles == ["Low score", "High score"]
+
+
+def test_completion_change_recorded_in_history(client, workspace_id):
+    """Mark + unmark events show up in item history under the
+    `fields` kind — no special history hook needed because
+    `record_fields_change` already captures any tracked field that
+    transitions."""
+    create = client.post(
+        f"/v1/workspaces/{workspace_id}/items", json={"title": "Track me"}
+    )
+    item_id = create.json()["id"]
+    client.patch(
+        f"/v1/items/{item_id}",
+        json={"completed_at": "2026-05-26T01:00:00+00:00"},
+    )
+    client.patch(f"/v1/items/{item_id}", json={"completed_at": None})
+
+    entries = client.get(f"/v1/items/{item_id}/history").json()
+    # Newest first: unmark, then mark.
+    assert len(entries) == 2
+    assert all(e["kind"] == "fields" for e in entries)
+    assert entries[0]["before"]["completed_at"] is not None
+    assert entries[0]["after"]["completed_at"] is None
+    assert entries[1]["before"]["completed_at"] is None
+    assert entries[1]["after"]["completed_at"] is not None

@@ -62,6 +62,11 @@ class BacklogItemUpdate(BaseModel):
     description: str | None = Field(default=None)
     # `None` means "do not update". `[]` clears all tags.
     tags: list[str] | None = Field(default=None)
+    # Omitted from the request body → leave alone. Explicit `null` →
+    # mark item as open (clear completion). ISO datetime string → mark
+    # completed at that moment. The router uses `exclude_unset=True`
+    # so the three cases stay distinguishable.
+    completed_at: datetime | None = Field(default=None)
 
     @field_validator("tags")
     @classmethod
@@ -79,6 +84,8 @@ class BacklogItemRead(BaseModel):
     tags: list[str]
     created_at: datetime
     updated_at: datetime
+    # Null = open, timestamp = shipped at that moment.
+    completed_at: datetime | None = None
     # RICE-specific score from the legacy `rice_scores` table. Populated
     # for RICE workspaces; None for non-RICE workspaces (which use the
     # polymorphic `score` field below). Kept as a separate field for

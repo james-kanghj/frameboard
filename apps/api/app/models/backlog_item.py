@@ -34,6 +34,12 @@ class BacklogItem(Base):
         onupdate=func.now(),
         nullable=False,
     )
+    # Set when the item is checked off. Null = still open. We keep the
+    # full timestamp (not just a boolean) so retrospectives can see
+    # "what shipped this quarter" without an extra history lookup.
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     workspace: Mapped["Workspace"] = relationship(back_populates="items")  # noqa: F821
     rice_score: Mapped["RICEScore | None"] = relationship(  # noqa: F821

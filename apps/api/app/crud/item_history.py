@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -16,6 +17,17 @@ from sqlalchemy.orm import Session
 
 from app.models.item_history import ItemHistory
 from app.models.rice_score import RICEScore
+
+
+def _json_safe(value: Any) -> Any:
+    """Coerce values that aren't JSON-serializable out of the box.
+    datetimes go in as ISO strings so the history JSON column accepts
+    them on both Postgres (jsonb) and SQLite (TEXT)."""
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, list):
+        return [_json_safe(v) for v in value]
+    return value
 
 
 def _rice_to_dict(rice: RICEScore | None) -> dict[str, Any] | None:
@@ -80,8 +92,8 @@ def record_fields_change(
         ItemHistory(
             item_id=item_id,
             kind="fields",
-            before={k: before.get(k) for k in diff_keys},
-            after={k: after.get(k) for k in diff_keys},
+            before={k: _json_safe(before.get(k)) for k in diff_keys},
+            after={k: _json_safe(after.get(k)) for k in diff_keys},
         )
     )
 

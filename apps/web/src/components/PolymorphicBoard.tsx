@@ -77,6 +77,7 @@ export function PolymorphicBoard({
       ? statusParam
       : "all";
   const tagFilter = searchParams.get("tag") ?? "all";
+  const showCompleted = searchParams.get("completed") === "show";
 
   const setQueryParam = useCallback(
     (key: string, value: string, defaultValue: string) => {
@@ -97,14 +98,19 @@ export function PolymorphicBoard({
     next.delete("q");
     next.delete("status");
     next.delete("tag");
+    next.delete("completed");
     const qs = next.toString();
     router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
   }, [searchParams, router, pathname]);
 
-  // Sort: scored items by score DESC, unscored by created_at ASC.
-  // Matches the backend's list_board ordering for non-RICE frameworks.
+  // Sort: completed items sink to the bottom first; within each group,
+  // scored items by score DESC, unscored by created_at ASC. Matches the
+  // backend's list_board ordering for non-RICE frameworks.
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => {
+      const aDone = a.completedAt ? 1 : 0;
+      const bDone = b.completedAt ? 1 : 0;
+      if (aDone !== bDone) return aDone - bDone;
       const aScore = a.score?.score ?? null;
       const bScore = b.score?.score ?? null;
       if (aScore !== null && bScore !== null) {
@@ -146,11 +152,17 @@ export function PolymorphicBoard({
     if (tagFilter !== "all") {
       result = result.filter((it) => (it.tags ?? []).includes(tagFilter));
     }
+    if (!showCompleted) {
+      result = result.filter((it) => !it.completedAt);
+    }
     return result;
-  }, [sortedItems, search, status, tagFilter]);
+  }, [sortedItems, search, status, tagFilter, showCompleted]);
 
   const filterActive =
-    search.trim().length > 0 || status !== "all" || tagFilter !== "all";
+    search.trim().length > 0 ||
+    status !== "all" ||
+    tagFilter !== "all" ||
+    showCompleted;
 
   const pushToast = (tone: ToastTone, message: string) => {
     const id = Date.now() + Math.random();
@@ -198,9 +210,13 @@ export function PolymorphicBoard({
               status={status}
               tagFilter={tagFilter}
               allTags={allTags}
+              showCompleted={showCompleted}
               onSearchChange={(v) => setQueryParam("q", v, "")}
               onStatusChange={(v) => setQueryParam("status", v, "all")}
               onTagChange={(v) => setQueryParam("tag", v, "all")}
+              onShowCompletedChange={(v) =>
+                setQueryParam("completed", v ? "show" : "", "")
+              }
               onClear={clearFilters}
               filterActive={filterActive}
             />
@@ -259,9 +275,11 @@ function FilterBar({
   status,
   tagFilter,
   allTags,
+  showCompleted,
   onSearchChange,
   onStatusChange,
   onTagChange,
+  onShowCompletedChange,
   onClear,
   filterActive,
 }: {
@@ -269,9 +287,11 @@ function FilterBar({
   status: FilterStatus;
   tagFilter: string;
   allTags: string[];
+  showCompleted: boolean;
   onSearchChange: (value: string) => void;
   onStatusChange: (value: FilterStatus) => void;
   onTagChange: (value: string) => void;
+  onShowCompletedChange: (next: boolean) => void;
   onClear: () => void;
   filterActive: boolean;
 }) {
@@ -355,6 +375,17 @@ function FilterBar({
           ))}
         </div>
       )}
+      <div className="text-xs">
+        <label className="inline-flex items-center gap-1.5 text-slate-600 hover:text-slate-900">
+          <input
+            type="checkbox"
+            checked={showCompleted}
+            onChange={(e) => onShowCompletedChange(e.target.checked)}
+            className="h-3.5 w-3.5 cursor-pointer rounded border-slate-300 text-slate-900 focus:ring-1 focus:ring-slate-500"
+          />
+          Show completed
+        </label>
+      </div>
     </div>
   );
 }
@@ -458,6 +489,7 @@ function BoardTable({
       <table className="min-w-full text-sm">
         <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wider text-slate-500">
           <tr>
+            <th className="w-10 px-3 py-3" aria-label="Done" />
             <th className="w-12 px-3 py-3 text-left">#</th>
             <th className="px-3 py-3 text-left">Title</th>
             {config.inputs.map((inp) => (
@@ -528,11 +560,53 @@ function BoardRow({
     }
   }
 
+  async function toggleCompleted() {
+    const previous = item.completedAt;
+    const next = previous ? null : new Date().toISOString();
+    setItems((curr) =>
+      curr.map((it) =>
+        it.id === item.id ? { ...it, completedAt: next } : it,
+      ),
+    );
+    try {
+      await updateItem(item.id, { completedAt: next });
+    } catch (err) {
+      setItems((curr) =>
+        curr.map((it) =>
+          it.id === item.id ? { ...it, completedAt: previous } : it,
+        ),
+      );
+      pushToast(
+        "error",
+        err instanceof Error ? err.message : "Failed to update item",
+      );
+    }
+  }
+
+  const isDone = Boolean(item.completedAt);
+
   return (
-    <tr className="hover:bg-slate-50/60">
+    <tr
+      className={`hover:bg-slate-50/60 ${
+        isDone ? "bg-slate-50/40 text-slate-400" : ""
+      }`}
+    >
+      <td className="px-3 py-3 text-center">
+        <input
+          type="checkbox"
+          checked={isDone}
+          onChange={toggleCompleted}
+          aria-label={isDone ? "Mark as open" : "Mark as done"}
+          className="h-4 w-4 cursor-pointer rounded border-slate-300 text-slate-900 focus:ring-1 focus:ring-slate-500"
+        />
+      </td>
       <td className="px-3 py-3 text-slate-400">{rank}</td>
       <td className="px-3 py-3">
-        <div className="font-medium text-slate-900">{item.title}</div>
+        <div
+          className={`font-medium ${isDone ? "text-slate-500 line-through" : "text-slate-900"}`}
+        >
+          {item.title}
+        </div>
         {item.description && (
           <div className="mt-0.5 text-xs text-slate-500 line-clamp-1">
             {item.description}

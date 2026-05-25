@@ -94,13 +94,21 @@ def delete_rice_score(db: Session, item_id: UUID) -> None:
 
 
 def list_board(db: Session, *, workspace_id: UUID) -> list[BacklogItem]:
-    """Workspace items sorted by RICE score DESC (nulls last), then by
-    item.created_at ASC. Outer-joined so unscored items still appear."""
+    """Workspace items sorted with three keys, in priority order:
+    1. Completed items (completed_at != NULL) sink to the bottom so
+       the active board isn't cluttered by shipped work.
+    2. Within each group, sort by RICE score DESC (nulls last).
+    3. Tie-break by created_at ASC for deterministic ordering.
+    """
     stmt = (
         select(BacklogItem)
         .outerjoin(RICEScore, RICEScore.item_id == BacklogItem.id)
         .where(BacklogItem.workspace_id == workspace_id)
         .options(selectinload(BacklogItem.rice_score))
-        .order_by(nulls_last(RICEScore.score.desc()), BacklogItem.created_at.asc())
+        .order_by(
+            BacklogItem.completed_at.is_not(None),
+            nulls_last(RICEScore.score.desc()),
+            BacklogItem.created_at.asc(),
+        )
     )
     return list(db.execute(stmt).scalars().all())

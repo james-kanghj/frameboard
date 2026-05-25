@@ -16,7 +16,7 @@ import { createPortal } from "react-dom";
 
 import type { BacklogItem, RICEImpact } from "@frameboard/shared";
 
-import { createItem, deleteItem, scoreRICE } from "@/lib/api";
+import { createItem, deleteItem, scoreRICE, updateItem } from "@/lib/api";
 
 import { EditItemModal } from "@/components/EditItemModal";
 import { ImpactSelect } from "@/components/ImpactSelect";
@@ -101,6 +101,11 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
       ? scoreParam
       : "all";
   const tagFilter = searchParams.get("tag") ?? "all";
+  // Completion filter: hide completed items by default so the active
+  // board isn't cluttered with shipped work. URL `?completed=show`
+  // mixes them back in (rendered with strikethrough, sorted to the
+  // bottom).
+  const showCompleted = searchParams.get("completed") === "show";
 
   const setQueryParam = useCallback(
     (key: string, value: string, defaultValue: string) => {
@@ -123,6 +128,7 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
     next.delete("effort");
     next.delete("score");
     next.delete("tag");
+    next.delete("completed");
     const qs = next.toString();
     router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
   }, [searchParams, router, pathname]);
@@ -173,15 +179,19 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
     if (tagFilter !== "all") {
       result = result.filter((it) => (it.tags ?? []).includes(tagFilter));
     }
+    if (!showCompleted) {
+      result = result.filter((it) => !it.completedAt);
+    }
     return result;
-  }, [sortedItems, search, status, effort, scoreBucket, tagFilter]);
+  }, [sortedItems, search, status, effort, scoreBucket, tagFilter, showCompleted]);
 
   const filterActive =
     search.trim().length > 0 ||
     status !== "all" ||
     effort !== "all" ||
     scoreBucket !== "all" ||
-    tagFilter !== "all";
+    tagFilter !== "all" ||
+    showCompleted;
 
   const pushToast: ToastPusher = (tone, message) => {
     const id = Date.now() + Math.random();
@@ -226,11 +236,15 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
               scoreBucket={scoreBucket}
               tagFilter={tagFilter}
               allTags={allTags}
+              showCompleted={showCompleted}
               onSearchChange={(v) => setQueryParam("q", v, "")}
               onStatusChange={(v) => setQueryParam("status", v, "all")}
               onEffortChange={(v) => setQueryParam("effort", v, "all")}
               onScoreBucketChange={(v) => setQueryParam("score", v, "all")}
               onTagChange={(v) => setQueryParam("tag", v, "all")}
+              onShowCompletedChange={(v) =>
+                setQueryParam("completed", v ? "show" : "", "")
+              }
               onClear={clearFilters}
               filterActive={filterActive}
             />
@@ -297,11 +311,13 @@ function FilterBar({
   scoreBucket,
   tagFilter,
   allTags,
+  showCompleted,
   onSearchChange,
   onStatusChange,
   onEffortChange,
   onScoreBucketChange,
   onTagChange,
+  onShowCompletedChange,
   onClear,
   filterActive,
 }: {
@@ -311,11 +327,13 @@ function FilterBar({
   scoreBucket: ScoreBucket;
   tagFilter: string;
   allTags: string[];
+  showCompleted: boolean;
   onSearchChange: (value: string) => void;
   onStatusChange: (value: FilterStatus) => void;
   onEffortChange: (value: EffortBucket) => void;
   onScoreBucketChange: (value: ScoreBucket) => void;
   onTagChange: (value: string) => void;
+  onShowCompletedChange: (next: boolean) => void;
   onClear: () => void;
   filterActive: boolean;
 }) {
@@ -417,6 +435,15 @@ function FilterBar({
             ]}
           />
         )}
+        <label className="ml-auto flex items-center gap-1.5 text-slate-600 hover:text-slate-900">
+          <input
+            type="checkbox"
+            checked={showCompleted}
+            onChange={(e) => onShowCompletedChange(e.target.checked)}
+            className="h-3.5 w-3.5 cursor-pointer rounded border-slate-300 text-slate-900 focus:ring-1 focus:ring-slate-500"
+          />
+          Show completed
+        </label>
       </div>
     </div>
   );
@@ -1038,6 +1065,7 @@ function BoardTable({
       <table className="min-w-full text-sm">
         <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wider text-slate-500">
           <tr>
+            <th className="w-10 px-3 py-3" aria-label="Done" />
             <th className="w-12 px-3 py-3 text-left">#</th>
             <th className="px-3 py-3 text-left">Title</th>
             <th className="w-28 px-3 py-3 text-right">Reach</th>
@@ -1184,11 +1212,56 @@ function BoardRow({
     }
   }
 
+  async function toggleCompleted() {
+    // Optimistic flip: a `null` completedAt becomes "now" (mark done),
+    // a non-null one becomes null (reopen). Rolls back on backend
+    // failure so the checkbox stays in sync with persisted state.
+    const previous = item.completedAt;
+    const next = previous ? null : new Date().toISOString();
+    setItems((curr) =>
+      curr.map((it) =>
+        it.id === item.id ? { ...it, completedAt: next } : it,
+      ),
+    );
+    try {
+      await updateItem(item.id, { completedAt: next });
+    } catch (err) {
+      setItems((curr) =>
+        curr.map((it) =>
+          it.id === item.id ? { ...it, completedAt: previous } : it,
+        ),
+      );
+      pushToast(
+        "error",
+        err instanceof Error ? err.message : "Failed to update item",
+      );
+    }
+  }
+
+  const isDone = Boolean(item.completedAt);
+
   return (
-    <tr className="hover:bg-slate-50/60">
+    <tr
+      className={`hover:bg-slate-50/60 ${
+        isDone ? "bg-slate-50/40 text-slate-400" : ""
+      }`}
+    >
+      <td className="px-3 py-3 text-center">
+        <input
+          type="checkbox"
+          checked={isDone}
+          onChange={toggleCompleted}
+          aria-label={isDone ? "Mark as open" : "Mark as done"}
+          className="h-4 w-4 cursor-pointer rounded border-slate-300 text-slate-900 focus:ring-1 focus:ring-slate-500"
+        />
+      </td>
       <td className="px-3 py-3 text-slate-400">{rank}</td>
       <td className="px-3 py-3">
-        <div className="font-medium text-slate-900">{item.title}</div>
+        <div
+          className={`font-medium ${isDone ? "text-slate-500 line-through" : "text-slate-900"}`}
+        >
+          {item.title}
+        </div>
         {item.description && (
           <div className="mt-0.5 text-xs text-slate-500 line-clamp-1">
             {item.description}
@@ -1789,6 +1862,11 @@ function computeScore(
 // deterministic on the client between server-refresh boundaries.
 function sortByScore(items: BacklogItem[]): BacklogItem[] {
   return [...items].sort((a, b) => {
+    // Completed items sink to the bottom regardless of score, so the
+    // active board isn't cluttered by shipped work.
+    const aDone = a.completedAt ? 1 : 0;
+    const bDone = b.completedAt ? 1 : 0;
+    if (aDone !== bDone) return aDone - bDone;
     const aScore = a.riceScore?.score ?? null;
     const bScore = b.riceScore?.score ?? null;
     if (aScore !== null && bScore !== null) {

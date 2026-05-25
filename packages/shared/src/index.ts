@@ -23,6 +23,9 @@ export interface BacklogItem {
   tags: string[];
   createdAt: string;
   updatedAt: string;
+  // Null = open / not yet shipped. Timestamp = when the item was
+  // checked off.
+  completedAt: string | null;
   // RICE-specific score from the legacy `rice_scores` table. Populated
   // for RICE workspaces.
   riceScore: RICEScoreData | null;
@@ -84,6 +87,9 @@ export interface UpdateItemInput {
   // `null` is not allowed here — backend treats undefined as "leave alone"
   // and an empty array `[]` as "clear all tags".
   tags?: string[];
+  // Omitted → leave alone. `null` → mark item as open (clear
+  // completion). ISO string → mark completed at that moment.
+  completedAt?: string | null;
 }
 
 export interface ScoreRICEInput {

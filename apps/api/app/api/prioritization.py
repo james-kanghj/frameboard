@@ -169,10 +169,13 @@ def get_board(
     )
 
     def sort_key(it):
+        # Completed items sink to the bottom; within each group, scored
+        # items lead by score DESC, then unscored by created_at ASC.
+        is_completed = 1 if it.completed_at else 0
         row = scores_map.get(it.id)
         if row is None:
-            return (1, 0, it.created_at)
-        return (0, -row.score, it.created_at)
+            return (is_completed, 1, 0, it.created_at)
+        return (is_completed, 0, -row.score, it.created_at)
 
     items_sorted = sorted(items, key=sort_key)
     result: list[BacklogItemRead] = []
@@ -187,6 +190,7 @@ def get_board(
                 tags=it.tags,
                 created_at=it.created_at,
                 updated_at=it.updated_at,
+                completed_at=it.completed_at,
                 rice_score=None,
                 score=ScoreRead.model_validate(score_row) if score_row else None,
             )
