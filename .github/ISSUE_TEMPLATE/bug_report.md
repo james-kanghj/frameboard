@@ -1,5 +1,3 @@
-/.github/ISSUE_TEMPLATE/bug_report.md
-
 ---
 name: Bug report
 about: Something is broken or behaving unexpectedly

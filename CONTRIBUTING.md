@@ -1,5 +1,3 @@
-/CONTRIBUTING.md
-
 # Contributing to Frameboard
 
 Thanks for your interest in contributing! Frameboard is built to help product teams make better prioritization decisions, and your contributions help us get there.

@@ -1,5 +1,3 @@
-/docs/CLAUDE_OSS_APPLICATION.md
-
 # Claude for Open Source Program — Application Plan
 
 > 이 문서는 신청 후 삭제하거나 private 폴더로 옮기세요. 어필 멘트는 신청 폼에 직접 복붙.

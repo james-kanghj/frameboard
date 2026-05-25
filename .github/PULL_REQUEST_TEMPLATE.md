@@ -1,5 +1,3 @@
-/.github/PULL_REQUEST_TEMPLATE.md
-
 ## Summary
 
 What does this PR do? Why?

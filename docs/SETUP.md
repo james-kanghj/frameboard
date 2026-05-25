@@ -1,5 +1,3 @@
-/docs/SETUP.md
-
 # Setup
 
 ## Prerequisites

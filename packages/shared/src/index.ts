@@ -1,4 +1,4 @@
-/packages/shared/src/index.ts
+// /packages/shared/src/index.ts
 
 export type Framework = "RICE" | "ICE" | "MoSCoW" | "ValueEffort" | "Kano";
 

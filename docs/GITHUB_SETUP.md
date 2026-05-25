@@ -1,5 +1,3 @@
-/docs/GITHUB_SETUP.md
-
 # GitHub 셋업 가이드
 
 이 가이드는 로컬 코드를 GitHub에 올리고, Projects 보드까지 세팅하는 전체 흐름입니다.

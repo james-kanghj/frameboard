@@ -1,5 +1,3 @@
-/packages/shared/package.json
-
 {
   "name": "@frameboard/shared",
   "version": "0.1.0",

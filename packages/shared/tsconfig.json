@@ -1,5 +1,3 @@
-/packages/shared/tsconfig.json
-
 {
   "compilerOptions": {
     "target": "ES2022",
