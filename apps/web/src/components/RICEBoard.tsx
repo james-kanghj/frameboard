@@ -86,6 +86,7 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
           <EmptyState onAdd={() => setAddOpen(true)} />
         ) : (
           <div className="space-y-4">
+            <ScoreDistribution items={sortedItems} />
             <MetricLegend />
             <BoardTable
               items={sortedItems}
@@ -125,6 +126,67 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
 
       <ToastStack toasts={toasts} />
     </section>
+  );
+}
+
+// ──────────────────────────────────────────────────────── Score distribution ──
+
+// Horizontal bar chart of the top-N scored items. Gives the board a
+// visual hierarchy at a glance — table alone is hard to scan once item
+// count climbs past ~10. Pure CSS/SVG, no chart library, so the edge
+// runtime bundle stays small.
+function ScoreDistribution({ items }: { items: BacklogItem[] }) {
+  // Items come pre-sorted by score DESC; just filter for scored and slice.
+  const scored = items.filter((it) => it.riceScore !== null).slice(0, 10);
+  if (scored.length < 2) return null;
+
+  const maxScore = scored[0]?.riceScore?.score ?? 0;
+  if (maxScore <= 0) return null;
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+      <div className="mb-4 flex items-baseline justify-between gap-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+          Top {scored.length} by score
+        </h2>
+        <span className="text-xs text-slate-500">
+          of {items.length} {items.length === 1 ? "item" : "items"}
+        </span>
+      </div>
+      <ol className="space-y-2">
+        {scored.map((item, idx) => {
+          const score = item.riceScore?.score ?? 0;
+          // Floor at 2% so even very low scores show a visible sliver.
+          const widthPct = Math.max(2, (score / maxScore) * 100);
+          return (
+            <li key={item.id} className="flex items-center gap-3 text-sm">
+              <span className="w-5 shrink-0 text-right tabular-nums text-slate-400">
+                {idx + 1}
+              </span>
+              <span
+                className="w-32 shrink-0 truncate text-slate-700 sm:w-56"
+                title={item.title}
+              >
+                {item.title}
+              </span>
+              <div
+                className="relative h-6 flex-1 overflow-hidden rounded bg-slate-100"
+                role="img"
+                aria-label={`Score ${score.toFixed(2)} of ${maxScore.toFixed(2)} maximum`}
+              >
+                <div
+                  className="h-full rounded bg-slate-900"
+                  style={{ width: `${widthPct}%` }}
+                />
+              </div>
+              <span className="w-16 shrink-0 text-right font-semibold tabular-nums text-slate-900 sm:w-20">
+                {score.toFixed(2)}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 
