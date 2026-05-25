@@ -12,7 +12,10 @@
 [![CI](https://github.com/james-kanghj/frameboard/actions/workflows/ci.yml/badge.svg)](https://github.com/james-kanghj/frameboard/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/james-kanghj/frameboard?style=flat&logo=github)](https://github.com/james-kanghj/frameboard/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/james-kanghj/frameboard)](https://github.com/james-kanghj/frameboard/commits/main)
+[![Open issues](https://img.shields.io/github/issues/james-kanghj/frameboard?logo=github)](https://github.com/james-kanghj/frameboard/issues)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Built with Claude Code](https://img.shields.io/badge/built%20with-Claude%20Code-D97757)](https://claude.com/claude-code)
 
