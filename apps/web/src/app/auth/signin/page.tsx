@@ -86,8 +86,7 @@ export default async function SignInPage({ searchParams }: Props) {
           >
             open-source terms
           </a>
-          . Self-hosting? Set <code>NEXT_PUBLIC_AUTH_DISABLED=1</code> to skip
-          this screen.
+          .
         </p>
       </div>
     </main>
