@@ -57,3 +57,7 @@ coverage/
 /apps/web/test-results/
 /apps/web/playwright-report/
 /apps/web/playwright/.cache/
+
+# Cloudflare Pages / Workers build artifacts
+.vercel/
+.wrangler/
