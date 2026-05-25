@@ -4,7 +4,10 @@ import type {
   BacklogItem,
   CreateItemInput,
   CreateWorkspaceInput,
+  Framework,
   ItemHistoryEntry,
+  ScoreData,
+  ScoreRequestInput,
   ScoreRICEInput,
   ScoreResult,
   UpdateItemInput,
@@ -255,4 +258,27 @@ export function scoreRICE(input: ScoreRICEInput): Promise<ScoreResult> {
 
 export function deleteRICE(itemId: string): Promise<void> {
   return request<void>(`/v1/items/${itemId}/rice`, { method: "DELETE" });
+}
+
+// Unified scoring endpoint — works for every supported framework.
+// Returns the persisted ScoreData (item_id, framework, inputs, score,
+// updated_at). For RICE the backend still mirrors the value into the
+// legacy rice_scores table so the existing board read path keeps
+// working.
+export function scoreItem(input: ScoreRequestInput): Promise<ScoreData> {
+  return request<ScoreData>("/v1/score", { method: "POST", body: input });
+}
+
+// Clear a polymorphic (ICE / MoSCoW / ValueEffort) score. For RICE
+// callers should use deleteRICE(); both ultimately land on the same
+// backend table for RICE but the legacy /rice endpoint keeps the
+// history-log hook firing correctly.
+export function deleteScore(
+  itemId: string,
+  framework: Framework,
+): Promise<void> {
+  return request<void>(`/v1/items/${itemId}/score`, {
+    method: "DELETE",
+    query: { framework },
+  });
 }

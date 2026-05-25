@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import type { BacklogItem, Workspace } from "@frameboard/shared";
 
+import { PolymorphicBoard } from "@/components/PolymorphicBoard";
 import { RICEBoard } from "@/components/RICEBoard";
 import { ApiError, getWorkspace, getWorkspaceBoard } from "@/lib/api";
 
@@ -32,6 +33,12 @@ export default async function WorkspaceBoardPage({ params }: PageProps) {
     throw err;
   }
 
+  // Dispatch on framework: RICE keeps its full-featured board (inline
+  // editing, charts, effort/score bucket filters); the other three
+  // frameworks render the leaner polymorphic board with a
+  // framework-aware scoring modal. This isolates the RICE-shaped
+  // affordances from boards that don't have a notion of effort or a
+  // numeric impact axis.
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">
       <Link
@@ -40,11 +47,20 @@ export default async function WorkspaceBoardPage({ params }: PageProps) {
       >
         ← All workspaces
       </Link>
-      <RICEBoard
-        workspaceId={id}
-        workspaceName={workspace.name}
-        initialItems={items}
-      />
+      {workspace.framework === "RICE" ? (
+        <RICEBoard
+          workspaceId={id}
+          workspaceName={workspace.name}
+          initialItems={items}
+        />
+      ) : (
+        <PolymorphicBoard
+          workspaceId={id}
+          workspaceName={workspace.name}
+          framework={workspace.framework}
+          initialItems={items}
+        />
+      )}
     </main>
   );
 }
