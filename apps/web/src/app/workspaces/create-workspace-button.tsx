@@ -3,13 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import type { Framework } from "@frameboard/shared";
+
 import { createWorkspace } from "@/lib/api";
 
-interface Props {
-  ownerEmail: string;
-}
+const FRAMEWORK_OPTIONS: { value: Framework; label: string }[] = [
+  { value: "RICE", label: "RICE — Reach × Impact × Confidence ÷ Effort" },
+  { value: "ICE", label: "ICE — Impact × Confidence × Ease" },
+  { value: "ValueEffort", label: "Value × Effort — Value ÷ Effort" },
+  { value: "MoSCoW", label: "MoSCoW — Must / Should / Could / Won't" },
+];
 
-export function CreateWorkspaceButton({ ownerEmail }: Props) {
+export function CreateWorkspaceButton() {
   const [open, setOpen] = useState(false);
 
   return (
@@ -21,25 +26,15 @@ export function CreateWorkspaceButton({ ownerEmail }: Props) {
       >
         Create workspace
       </button>
-      {open && (
-        <CreateWorkspaceModal
-          ownerEmail={ownerEmail}
-          onClose={() => setOpen(false)}
-        />
-      )}
+      {open && <CreateWorkspaceModal onClose={() => setOpen(false)} />}
     </>
   );
 }
 
-function CreateWorkspaceModal({
-  ownerEmail,
-  onClose,
-}: {
-  ownerEmail: string;
-  onClose: () => void;
-}) {
+function CreateWorkspaceModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [framework, setFramework] = useState<Framework>("RICE");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,7 +56,7 @@ function CreateWorkspaceModal({
     setSubmitting(true);
     setError(null);
     try {
-      await createWorkspace({ name: trimmed, ownerEmail });
+      await createWorkspace({ name: trimmed, framework });
       router.refresh();
       onClose();
     } catch (err) {
@@ -111,6 +106,31 @@ function CreateWorkspaceModal({
               placeholder="Q2 roadmap"
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 disabled:opacity-60"
             />
+          </div>
+          <div>
+            <label
+              htmlFor="workspace-framework"
+              className="block text-sm font-medium text-slate-700"
+            >
+              Framework
+            </label>
+            <select
+              id="workspace-framework"
+              value={framework}
+              onChange={(e) => setFramework(e.target.value as Framework)}
+              disabled={submitting}
+              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 disabled:opacity-60"
+            >
+              {FRAMEWORK_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-slate-500">
+              Determines the scoring inputs and how the board sorts. Can be
+              changed later from the workspace.
+            </p>
           </div>
           {error && (
             <p

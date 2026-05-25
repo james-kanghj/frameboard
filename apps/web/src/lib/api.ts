@@ -8,6 +8,7 @@ import type {
   ScoreRICEInput,
   ScoreResult,
   UpdateItemInput,
+  UpdateWorkspaceInput,
   Workspace,
 } from "@frameboard/shared";
 
@@ -51,6 +52,64 @@ function transformKeys<T>(input: unknown, fn: (key: string) => string): T {
 export const camelize = <T>(value: unknown): T => transformKeys<T>(value, toCamel);
 export const snakeize = <T>(value: unknown): T => transformKeys<T>(value, toSnake);
 
+// ---------- auth token plumbing ----------
+
+const COOKIE_NAMES = [
+  "authjs.session-token",
+  "__Secure-authjs.session-token",
+];
+
+// Browser-side cache so we don't hit /api/token on every fetch.
+// Cleared on visibility-change so a fresh sign-in is picked up fast.
+let clientCachedToken: string | null = null;
+let clientCachedAt = 0;
+const CLIENT_CACHE_TTL_MS = 5 * 60 * 1000;
+
+if (typeof window !== "undefined") {
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      clientCachedToken = null;
+    }
+  });
+}
+
+async function getAuthToken(): Promise<string | null> {
+  if (typeof window === "undefined") {
+    // Server-side: read the NextAuth cookie directly. Dynamic import
+    // keeps `next/headers` out of any client bundles that pull api.ts.
+    try {
+      const { cookies } = await import("next/headers");
+      const jar = await cookies();
+      for (const name of COOKIE_NAMES) {
+        const c = jar.get(name);
+        if (c?.value) return c.value;
+      }
+    } catch {
+      // Outside a request scope (e.g. unit tests) — silently fall
+      // through. The backend's AUTH_DISABLED=1 mode will still let
+      // calls through without an Authorization header.
+    }
+    return null;
+  }
+  if (
+    clientCachedToken &&
+    Date.now() - clientCachedAt < CLIENT_CACHE_TTL_MS
+  ) {
+    return clientCachedToken;
+  }
+  try {
+    const response = await fetch("/api/token", { credentials: "include" });
+    if (!response.ok) return null;
+    const { token } = (await response.json()) as { token?: string };
+    if (!token) return null;
+    clientCachedToken = token;
+    clientCachedAt = Date.now();
+    return token;
+  } catch {
+    return null;
+  }
+}
+
 // ---------- fetch wrapper ----------
 
 export class ApiError extends Error {
@@ -82,9 +141,18 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
     }
   }
 
+  const headers: Record<string, string> = {};
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+  const token = await getAuthToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const init: RequestInit = {
     method,
-    headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+    headers,
     cache: "no-store",
   };
   if (body !== undefined) {
@@ -122,20 +190,27 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
 
 // ---------- Workspaces ----------
 
-export function listWorkspaces(ownerEmail?: string): Promise<Workspace[]> {
-  return request<Workspace[]>("/v1/workspaces", {
-    query: { owner_email: ownerEmail },
-  });
+export function listWorkspaces(): Promise<Workspace[]> {
+  // Owner is derived from the authenticated session — no query needed.
+  return request<Workspace[]>("/v1/workspaces");
 }
 
 export function createWorkspace(input: CreateWorkspaceInput): Promise<Workspace> {
   return request<Workspace>("/v1/workspaces", { method: "POST", body: input });
 }
 
-// Returns just workspace metadata (no nested items). Use getWorkspaceBoard
-// when you need the items — that endpoint returns them in the right order.
 export function getWorkspace(workspaceId: string): Promise<Workspace> {
   return request<Workspace>(`/v1/workspaces/${workspaceId}`);
+}
+
+export function updateWorkspace(
+  workspaceId: string,
+  input: UpdateWorkspaceInput,
+): Promise<Workspace> {
+  return request<Workspace>(`/v1/workspaces/${workspaceId}`, {
+    method: "PATCH",
+    body: input,
+  });
 }
 
 export function getWorkspaceBoard(workspaceId: string): Promise<BacklogItem[]> {

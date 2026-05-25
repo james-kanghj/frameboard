@@ -23,23 +23,53 @@ export interface BacklogItem {
   tags: string[];
   createdAt: string;
   updatedAt: string;
+  // RICE-specific score from the legacy `rice_scores` table. Populated
+  // for RICE workspaces.
   riceScore: RICEScoreData | null;
+  // Polymorphic score for non-RICE frameworks. Populated by the board
+  // endpoint when the workspace uses ICE / MoSCoW / ValueEffort.
+  score?: ScoreData | null;
 }
 
 // Mirrors backend WorkspaceRead.
 export interface Workspace {
   id: string;
   name: string;
+  framework: Framework;
   ownerId: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface UpdateWorkspaceInput {
+  name?: string;
+  framework?: Framework;
 }
 
 // ---------- Input shapes (FE → BE; the api client snake_cases keys) ----------
 
 export interface CreateWorkspaceInput {
   name: string;
-  ownerEmail: string;
+  // Optional — the backend defaults to RICE. Pass when creating a
+  // workspace for a non-default framework.
+  framework?: Framework;
+}
+
+// Polymorphic score envelope returned by the unified board endpoint
+// for non-RICE workspaces. RICE workspaces continue to use `riceScore`
+// on BacklogItem.
+export interface ScoreData {
+  itemId: string;
+  framework: Framework;
+  inputs: Record<string, unknown>;
+  score: number;
+  updatedAt: string;
+}
+
+export interface ScoreRequestInput {
+  itemId: string;
+  framework: Framework;
+  inputs: Record<string, unknown>;
 }
 
 export interface CreateItemInput {
