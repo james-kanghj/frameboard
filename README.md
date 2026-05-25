@@ -4,9 +4,13 @@
 
 **An open-source workspace for product teams to run RICE, ICE, MoSCoW, and Kano prioritization — without leaving the browser.**
 
+### 🚀 [Live demo → frameboard.pages.dev](https://frameboard.pages.dev)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status)
+[![CI](https://github.com/james-kanghj/frameboard/actions/workflows/ci.yml/badge.svg)](https://github.com/james-kanghj/frameboard/actions/workflows/ci.yml)
+[![Built with Claude Code](https://img.shields.io/badge/built%20with-Claude%20Code-D97757)](https://claude.com/claude-code)
 
 </div>
 
@@ -25,16 +29,18 @@ Product managers waste hours each sprint debating "what to build next" in spread
 
 ## Status
 
-Pre-alpha, built in the open. **Backend is functional** (RICE scoring persisted, 42 tests passing). Frontend workspace list is live; the scoring board UI is next.
+Alpha, built in the open. **Live and deployed** at [frameboard.pages.dev](https://frameboard.pages.dev) (Cloudflare Pages frontend + Render backend + Neon Postgres). End-to-end happy path is functional: create a workspace, add items, score them with RICE, edit inline or via modal, delete.
 
 | Layer | Status |
 |---|---|
 | Database schema | ✅ Users, workspaces, items, RICE scores |
-| Backend API | ✅ 10 endpoints, full test coverage |
-| Frontend workspace list | ✅ Create + browse workspaces |
-| Frontend scoring board | 🚧 In progress |
+| Backend API | ✅ Full CRUD + RICE upsert (44 pytest tests) |
+| Frontend workspace list + board | ✅ Create, score, edit (modal + inline), delete |
+| End-to-end test suite | ✅ 5 Playwright scenarios, green in CI |
+| Production deployment | ✅ Cloudflare Pages + Render + Neon |
 | Auth | ⏳ Single-user hardcoded for MVP |
 | Self-host Docker image | ⏳ Planned |
+| Multi-framework (ICE / MoSCoW / Kano) | ⏳ RICE only for now |
 
 ## Quick start
 
@@ -89,7 +95,9 @@ See [docs/SETUP.md](docs/SETUP.md) for the full guide, including notes on port c
 | Backend  | FastAPI, Python 3.12+, SQLAlchemy 2.0, Alembic             |
 | Database | PostgreSQL 16 (Dockerized, port `5433` to avoid conflicts) |
 | Monorepo | pnpm workspaces + Turborepo                                |
-| Testing  | pytest (backend), Playwright (frontend, planned Step 7)    |
+| Testing  | pytest (44 tests, backend), Playwright (5 e2e scenarios)   |
+| Deploy   | Cloudflare Pages (frontend) + Render (backend) + Neon (DB) |
+| CI       | GitHub Actions — web, api, e2e jobs all gated on PRs       |
 
 ## Roadmap
 
@@ -98,15 +106,16 @@ See [docs/SETUP.md](docs/SETUP.md) for the full guide, including notes on port c
 - [x] Workspace and backlog item CRUD endpoints
 - [x] RICE score persistence with upsert + board endpoint
 - [x] Frontend API client + workspace list page
-- [ ] RICE scoring board UI (sortable, inline edit)
-- [ ] Item create/edit modal
-- [ ] End-to-end smoke tests (Playwright)
+- [x] RICE scoring board UI (sortable, inline edit)
+- [x] Item create/edit modal
+- [x] End-to-end smoke tests (Playwright, 5 scenarios)
+- [x] CI pipeline (web + api + e2e jobs)
+- [x] Public hosted instance ([frameboard.pages.dev](https://frameboard.pages.dev))
 - [ ] ICE / MoSCoW / Value-vs-Effort frameworks
 - [ ] Collaborative scoring with disagreement visualization
 - [ ] Jira / Linear / Notion export
 - [ ] Self-host Docker image
 - [ ] Multi-user auth (NextAuth.js + JWT)
-- [ ] Public hosted instance
 
 See [GitHub Projects](https://github.com/james-kanghj/frameboard/projects) for the live board.
 
@@ -116,7 +125,11 @@ Contributions are welcome — from typo fixes to new prioritization frameworks. 
 
 ## Maintainer
 
-Built and maintained by [James](https://github.com/james-kanghj) — an 11-year QA engineer pivoting to product management. Frameboard is the tool I wished my product managers had used.
+Built and maintained by [James](https://github.com/james-kanghj) — a 15-year QA/SDET engineer pivoting to product management. Frameboard is the tool I wished my product managers had used.
+
+## Built with Claude Code
+
+Frameboard was bootstrapped from an empty repo to a live production deployment in a single focused day, paired with [Claude Code](https://claude.com/claude-code) as a pair-programming partner. The commit history, CI runs, and architecture decisions are all public — useful as a reference for other solo builders evaluating LLM-assisted development workflows.
 
 ## License
 
