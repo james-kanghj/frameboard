@@ -112,6 +112,16 @@ Open [http://localhost:3000/workspaces](http://localhost:3000/workspaces).
 
 See [docs/SETUP.md](docs/SETUP.md) for the full guide, including notes on port choices and common pitfalls.
 
+### Self-host with Docker
+
+If you'd rather run the whole stack as containers (no local Python / pnpm install required):
+
+```bash
+docker compose -f docker-compose.selfhost.yml up -d --build
+```
+
+Brings up Postgres (`:5433`), the FastAPI backend (`:8001`), and the Next.js frontend (`:3000`). The backend auto-runs Alembic migrations on boot, so a fresh DB initializes itself. Override the build args in `docker-compose.selfhost.yml` if you're hosting under a custom domain — `NEXT_PUBLIC_API_BASE_URL` is inlined at build time and needs a rebuild to change.
+
 ## Tech stack
 
 | Layer    | Tech                                                       |
@@ -141,12 +151,13 @@ See [docs/SETUP.md](docs/SETUP.md) for the full guide, including notes on port c
 - [x] Board search — title + description, with URL state (`?q=`)
 - [x] Board status filter — All / Scored / Unscored segmented toggle (URL `?status=`)
 - [x] Board quick-wins filter — effort + score bucket chips (URL `?effort=` `?score=`)
+- [x] Metric legend tooltips — `(i)` buttons explain Reach / Impact (0.25→3 scale) / Confidence / Effort / Score
+- [x] Self-host Docker image — `docker compose -f docker-compose.selfhost.yml up --build` brings up Postgres + API + Web
 - [ ] Score history / change-log timeline per item
 - [ ] Item tags / categories — schema addition + tag filter UI
 - [ ] ICE / MoSCoW / Value-vs-Effort frameworks
 - [ ] Collaborative scoring with disagreement visualization
 - [ ] Jira / Linear / Notion export
-- [ ] Self-host Docker image
 - [ ] Multi-user auth (NextAuth.js + JWT)
 
 See [GitHub Projects](https://github.com/james-kanghj/frameboard/projects) for the live board.

@@ -1,0 +1,78 @@
+# /docker-compose.selfhost.yml
+#
+# Full self-host stack — Postgres + API + Web. Spun up with:
+#
+#   docker compose -f docker-compose.selfhost.yml up -d --build
+#
+# Then open http://localhost:3000. The DB is persisted in a named volume
+# so `up`/`down` cycles keep your data.
+#
+# The plain ./docker-compose.yml at the repo root is intentionally smaller
+# (db service only) — that's the local-dev setup where the API and web run
+# directly on the host via pnpm/uvicorn. This file is for "I just want
+# to run Frameboard, give me one command" use cases.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: frameboard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: frameboard
+      POSTGRES_PASSWORD: frameboard
+      POSTGRES_DB: frameboard
+    ports:
+      - "5433:5432"
+    volumes:
+      - frameboard-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U frameboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: frameboard-api
+    restart: unless-stopped
+    environment:
+      # 'db' hostname comes from the compose network. Port 5432 is the
+      # internal Postgres port — the 5433 host mapping doesn't apply
+      # between containers.
+      DATABASE_URL: postgresql+psycopg://frameboard:frameboard@db:5432/frameboard
+      API_HOST: 0.0.0.0
+      API_PORT: 8001
+      API_CORS_ORIGINS: http://localhost:3000
+      APP_ENV: production
+      APP_DEBUG: "false"
+      # JWT/secret values — replace before exposing publicly.
+      APP_SECRET_KEY: replace-me-openssl-rand-hex-32
+      JWT_SECRET_KEY: replace-me-openssl-rand-hex-32
+    ports:
+      - "8001:8001"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      # Build context is the repo root so the monorepo workspace
+      # (packages/shared, pnpm-lock.yaml) is reachable.
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # NEXT_PUBLIC_* are inlined at build time. Override these
+        # build args if hosting under a different domain.
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:8001
+        NEXT_PUBLIC_DEV_USER_EMAIL: self-host@example.com
+    container_name: frameboard-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  frameboard-db-data:

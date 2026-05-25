@@ -751,27 +751,201 @@ function ScatterView({ items }: { items: BacklogItem[] }) {
 // ───────────────────────────────────────────────────────────── Metric legend ──
 
 // Compact key shown above the table so newcomers know what each column
-// means without hunting for docs. Echoes the uppercase column headers in
-// the table itself so the connection is visual.
+// means without hunting for docs. Each entry has an (i) button — hover,
+// focus, or tap to open a richer explanation (e.g. what the 0.25/0.5/1
+// Impact values actually mean). Tooltip is portal'd so it can't be
+// clipped by overflow containers or stacking contexts.
 function MetricLegend() {
-  const entries: { term: string; def: string }[] = [
-    { term: "Reach", def: "People affected per period" },
-    { term: "Impact", def: "0.25 (min) → 3 (massive)" },
-    { term: "Confidence", def: "0.0 – 1.0 belief" },
-    { term: "Effort", def: "Person-months (> 0)" },
-    { term: "Score", def: "(Reach × Impact × Confidence) / Effort" },
+  const entries: {
+    term: string;
+    def: string;
+    detail: React.ReactNode;
+  }[] = [
+    {
+      term: "Reach",
+      def: "People affected per period",
+      detail: (
+        <>
+          <p className="font-medium text-slate-900">How many users (or events) are touched per time period.</p>
+          <p className="mt-2">Pick a unit and use it consistently across the workspace — <em>per quarter</em> is the standard PM default.</p>
+          <p className="mt-2 text-slate-500">Example: <span className="font-mono">5000</span> = 5,000 users / quarter.</p>
+        </>
+      ),
+    },
+    {
+      term: "Impact",
+      def: "0.25 (min) → 3 (massive)",
+      detail: (
+        <>
+          <p className="font-medium text-slate-900">How much each affected user benefits. RICE uses a fixed five-point scale:</p>
+          <ul className="mt-2 space-y-1">
+            <li><span className="font-mono">0.25</span> — minimal (barely noticed)</li>
+            <li><span className="font-mono">0.5</span> — low (small lift)</li>
+            <li><span className="font-mono">1</span> — medium (noticeable)</li>
+            <li><span className="font-mono">2</span> — high (clear win)</li>
+            <li><span className="font-mono">3</span> — massive (transformative)</li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      term: "Confidence",
+      def: "0.0 – 1.0 belief",
+      detail: (
+        <>
+          <p className="font-medium text-slate-900">Your confidence in the other three numbers (0–1).</p>
+          <ul className="mt-2 space-y-1">
+            <li><span className="font-mono">1.0</span> — backed by data / experiment</li>
+            <li><span className="font-mono">~0.8</span> — strong gut feel</li>
+            <li><span className="font-mono">~0.5</span> — best guess, very unsure</li>
+          </ul>
+          <p className="mt-2 text-slate-500">Acts as a hedge — the score is multiplied by this, so low confidence pulls big-sounding items back down.</p>
+        </>
+      ),
+    },
+    {
+      term: "Effort",
+      def: "Person-months (> 0)",
+      detail: (
+        <>
+          <p className="font-medium text-slate-900">How long one team member would take to ship this end-to-end, in person-months.</p>
+          <p className="mt-2">Include design, development, QA, and rollout — not just dev time.</p>
+          <p className="mt-2 text-slate-500">Example: <span className="font-mono">2</span> = roughly 2 engineer-months (or 1 designer + 1 engineer for a month).</p>
+        </>
+      ),
+    },
+    {
+      term: "Score",
+      def: "(Reach × Impact × Confidence) / Effort",
+      detail: (
+        <>
+          <p className="font-medium text-slate-900">The final RICE score — higher = more bang per person-month.</p>
+          <p className="mt-2 font-mono text-slate-700">score = (R × I × C) ÷ E</p>
+          <p className="mt-2 text-slate-500">Recomputes the moment you edit any of the four inputs. Sort the board by this column (descending) to see what to ship first.</p>
+        </>
+      ),
+    },
   ];
   return (
     <dl className="grid grid-cols-2 gap-x-5 gap-y-3 rounded-xl border border-slate-200 bg-slate-50/50 px-5 py-4 text-xs sm:grid-cols-3 lg:grid-cols-5">
-      {entries.map(({ term, def }) => (
+      {entries.map(({ term, def, detail }) => (
         <div key={term} className="space-y-0.5">
-          <dt className="font-semibold uppercase tracking-wider text-slate-500">
-            {term}
+          <dt className="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
+            <span>{term}</span>
+            <InfoTooltip label={`${term} — more info`}>{detail}</InfoTooltip>
           </dt>
           <dd className="text-slate-600">{def}</dd>
         </div>
       ))}
     </dl>
+  );
+}
+
+// Small (i) button with a portal'd tooltip that opens on hover, focus,
+// or tap. Portal escapes overflow/stacking-context clipping the way
+// RowMenu does; closes on outside click, Escape, scroll, or resize.
+function InfoTooltip({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<
+    { top: number; left: number } | null
+  >(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
+
+  const recompute = useCallback(() => {
+    if (!buttonRef.current) return;
+    const btn = buttonRef.current.getBoundingClientRect();
+    // Tooltip width is fixed via the className below; clamp position so
+    // it can't overflow the viewport on either edge (was happening for
+    // the leftmost metric "Reach" — half the bubble fell off-screen).
+    const TIP_WIDTH = 288; // matches w-72
+    const MARGIN = 8;
+    const center = btn.left + btn.width / 2 - TIP_WIDTH / 2;
+    const maxLeft = window.innerWidth - TIP_WIDTH - MARGIN;
+    const left = Math.max(MARGIN, Math.min(center, maxLeft));
+    setPosition({ top: btn.bottom + 6, left });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (open) recompute();
+  }, [open, recompute]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onClickAway(e: MouseEvent) {
+      if (
+        buttonRef.current?.contains(e.target as Node) ||
+        tipRef.current?.contains(e.target as Node)
+      ) {
+        return;
+      }
+      setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    function onReposition() {
+      setOpen(false);
+    }
+    document.addEventListener("mousedown", onClickAway);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onReposition, true);
+    window.addEventListener("resize", onReposition);
+    return () => {
+      document.removeEventListener("mousedown", onClickAway);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onReposition, true);
+      window.removeEventListener("resize", onReposition);
+    };
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-label={label}
+        aria-expanded={open}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 text-[9px] font-bold leading-none text-slate-500 transition hover:border-slate-500 hover:text-slate-700 focus:border-slate-500 focus:text-slate-700 focus:outline-none"
+      >
+        i
+      </button>
+      {open &&
+        position &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={tipRef}
+            role="tooltip"
+            style={{
+              position: "fixed",
+              top: position.top,
+              left: position.left,
+            }}
+            // Fixed w-72 (288px) so layout matches the position math
+            // above; max-w cap so very narrow viewports (mobile) shrink
+            // it instead of overflowing.
+            className="z-50 w-72 max-w-[calc(100vw-16px)] rounded-lg border border-slate-200 bg-white p-3 text-xs leading-relaxed text-slate-700 shadow-lg"
+            // Keep tooltip open while the cursor is inside it.
+            onMouseEnter={() => setOpen(true)}
+            onMouseLeave={() => setOpen(false)}
+          >
+            {children}
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }
 

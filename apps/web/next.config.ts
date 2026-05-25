@@ -27,6 +27,11 @@ if (process.env.NODE_ENV === "development") {
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@frameboard/shared"],
+  // `output: "standalone"` is only enabled when building for the Docker
+  // self-host image (BUILD_STANDALONE=1). next-on-pages drives the
+  // Cloudflare build through its own vercel-build pipeline and doesn't
+  // want a standalone output, so we keep it off by default.
+  output: process.env.BUILD_STANDALONE === "1" ? "standalone" : undefined,
   env: {
     NEXT_PUBLIC_APP_NAME: "Frameboard",
   },
