@@ -6,7 +6,7 @@ import { CreateWorkspaceButton } from "./create-workspace-button";
 
 // TODO(auth): replace with the authenticated user's email once real auth
 // (NextAuth/JWT) lands. Hardcoded for now since this is a single-user MVP.
-const CURRENT_USER_EMAIL = "[email protected]";
+const CURRENT_USER_EMAIL = process.env.NEXT_PUBLIC_DEV_USER_EMAIL ?? "[email protected]";
 
 export default async function WorkspacesPage() {
   const workspaces = await listWorkspaces(CURRENT_USER_EMAIL);
