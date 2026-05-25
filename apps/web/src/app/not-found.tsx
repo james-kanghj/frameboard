@@ -1,3 +1,8 @@
+// Edge runtime so the not-found page shares the root layout, which
+// calls `auth()` via UserBadge. Cloudflare Pages rejects the build
+// without an explicit edge runtime on every non-static route.
+export const runtime = "edge";
+
 import Link from "next/link";
 
 export default function NotFound() {

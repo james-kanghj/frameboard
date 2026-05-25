@@ -1,3 +1,8 @@
+// Edge runtime so the page can share the root layout — which calls
+// `auth()` server-side via UserBadge. Cloudflare Pages rejects the
+// build otherwise.
+export const runtime = "edge";
+
 import Link from "next/link";
 
 export default function HomePage() {
