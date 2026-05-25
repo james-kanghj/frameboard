@@ -1,0 +1,56 @@
+# /apps/api/app/crud/workspace.py
+
+from __future__ import annotations
+
+from uuid import UUID
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
+
+from app.models.backlog_item import BacklogItem
+from app.models.user import User
+from app.models.workspace import Workspace
+
+
+def get_or_create_user(db: Session, email: str) -> User:
+    existing = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
+    if existing is not None:
+        return existing
+    user = User(email=email, display_name=email.split("@", 1)[0])
+    db.add(user)
+    db.flush()
+    return user
+
+
+def create_workspace(db: Session, *, name: str, owner_email: str) -> Workspace:
+    owner = get_or_create_user(db, owner_email)
+    workspace = Workspace(name=name, owner_id=owner.id)
+    db.add(workspace)
+    db.commit()
+    db.refresh(workspace)
+    return workspace
+
+
+def list_workspaces(db: Session, *, owner_email: str | None = None) -> list[Workspace]:
+    stmt = select(Workspace).order_by(Workspace.created_at.desc())
+    if owner_email is not None:
+        stmt = stmt.join(User, Workspace.owner_id == User.id).where(User.email == owner_email)
+    return list(db.execute(stmt).scalars().all())
+
+
+def get_workspace(db: Session, workspace_id: UUID) -> Workspace | None:
+    stmt = (
+        select(Workspace)
+        .where(Workspace.id == workspace_id)
+        .options(selectinload(Workspace.items).selectinload(BacklogItem.rice_score))
+    )
+    return db.execute(stmt).scalar_one_or_none()
+
+
+def delete_workspace(db: Session, workspace_id: UUID) -> bool:
+    workspace = db.get(Workspace, workspace_id)
+    if workspace is None:
+        return False
+    db.delete(workspace)
+    db.commit()
+    return True
