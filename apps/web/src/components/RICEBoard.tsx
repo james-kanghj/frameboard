@@ -17,7 +17,8 @@ import type { BacklogItem, RICEImpact } from "@frameboard/shared";
 
 import { createItem, deleteItem, scoreRICE } from "@/lib/api";
 
-const IMPACT_OPTIONS: RICEImpact[] = [0.25, 0.5, 1, 2, 3];
+import { EditItemModal } from "@/components/EditItemModal";
+import { ImpactSelect } from "@/components/ImpactSelect";
 
 interface Props {
   workspaceId: string;
@@ -38,6 +39,7 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
   const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [addOpen, setAddOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<BacklogItem | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   // Resync local state when the server component refetches (router.refresh).
@@ -90,6 +92,7 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
               setItems={setItems}
               pushToast={pushToast}
               refresh={() => router.refresh()}
+              onEditItem={setEditingItem}
             />
           </div>
         )}
@@ -102,6 +105,18 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
           onCreated={(item) => {
             setItems((curr) => [...curr, item]);
             setAddOpen(false);
+            router.refresh();
+          }}
+          onError={(msg) => pushToast("error", msg)}
+        />
+      )}
+
+      {editingItem && (
+        <EditItemModal
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSaved={() => {
+            pushToast("success", "Item updated");
             router.refresh();
           }}
           onError={(msg) => pushToast("error", msg)}
@@ -168,9 +183,16 @@ interface TableProps {
   setItems: ItemsSetter;
   pushToast: ToastPusher;
   refresh: () => void;
+  onEditItem: (item: BacklogItem) => void;
 }
 
-function BoardTable({ items, setItems, pushToast, refresh }: TableProps) {
+function BoardTable({
+  items,
+  setItems,
+  pushToast,
+  refresh,
+  onEditItem,
+}: TableProps) {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200">
       <table className="min-w-full text-sm">
@@ -195,6 +217,7 @@ function BoardTable({ items, setItems, pushToast, refresh }: TableProps) {
               setItems={setItems}
               pushToast={pushToast}
               refresh={refresh}
+              onEditItem={onEditItem}
             />
           ))}
         </tbody>
@@ -211,9 +234,17 @@ interface RowProps {
   setItems: ItemsSetter;
   pushToast: ToastPusher;
   refresh: () => void;
+  onEditItem: (item: BacklogItem) => void;
 }
 
-function BoardRow({ item, rank, setItems, pushToast, refresh }: RowProps) {
+function BoardRow({
+  item,
+  rank,
+  setItems,
+  pushToast,
+  refresh,
+  onEditItem,
+}: RowProps) {
   const rs = item.riceScore;
   const [scoringOpen, setScoringOpen] = useState(false);
 
@@ -346,7 +377,7 @@ function BoardRow({ item, rank, setItems, pushToast, refresh }: RowProps) {
         <UnscoredCells onStartScoring={() => setScoringOpen(true)} />
       )}
 
-      <RowMenu onDelete={handleDelete} />
+      <RowMenu onDelete={handleDelete} onEdit={() => onEditItem(item)} />
     </tr>
   );
 }
@@ -619,163 +650,6 @@ function EditableNumberCell({
 const inlineInputClasses =
   "w-20 sm:w-24 rounded border border-slate-300 bg-white px-2 py-1 text-right text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
 
-// ─────────────────────────────────────────────────────────── Impact select ──
-
-// Native <select> on macOS renders the OS dark dropdown, which looks out of
-// place against the slate-themed table. Custom dropdown using the same
-// portal trick as RowMenu (table wrapper's overflow-x-auto would otherwise
-// clip an in-tree absolute menu). Width tracks the trigger, height-aware
-// flip when there's not enough room below.
-const IMPACT_MENU_HEIGHT_ESTIMATE = 200; // 5 options × ~32 px + padding
-const IMPACT_MENU_GAP = 4;
-
-function ImpactSelect({
-  value,
-  onChange,
-  disabled,
-}: {
-  value: number;
-  onChange: (next: RICEImpact) => void;
-  disabled?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState<
-    { top: number; left: number; width: number } | null
-  >(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useLayoutEffect(() => {
-    if (!open || !buttonRef.current) return;
-    const rect = buttonRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const openUpward =
-      spaceBelow < IMPACT_MENU_HEIGHT_ESTIMATE + IMPACT_MENU_GAP;
-    setPosition({
-      top: openUpward
-        ? rect.top - IMPACT_MENU_HEIGHT_ESTIMATE - IMPACT_MENU_GAP
-        : rect.bottom + IMPACT_MENU_GAP,
-      left: rect.left,
-      width: rect.width,
-    });
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    function onClickAway(e: MouseEvent) {
-      if (
-        buttonRef.current?.contains(e.target as Node) ||
-        menuRef.current?.contains(e.target as Node)
-      ) {
-        return;
-      }
-      setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    function onReposition() {
-      setOpen(false);
-    }
-    document.addEventListener("mousedown", onClickAway);
-    document.addEventListener("keydown", onKey);
-    window.addEventListener("scroll", onReposition, true);
-    window.addEventListener("resize", onReposition);
-    return () => {
-      document.removeEventListener("mousedown", onClickAway);
-      document.removeEventListener("keydown", onKey);
-      window.removeEventListener("scroll", onReposition, true);
-      window.removeEventListener("resize", onReposition);
-    };
-  }, [open]);
-
-  return (
-    <>
-      <button
-        ref={buttonRef}
-        type="button"
-        disabled={disabled}
-        onClick={() => setOpen((o) => !o)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        className="flex w-full items-center justify-between rounded border border-slate-200 bg-white px-2 py-1 text-left text-sm hover:bg-slate-50 focus:border-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        <span className="tabular-nums text-slate-900">{value}</span>
-        <svg
-          className={`h-3 w-3 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
-          viewBox="0 0 12 12"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M3 5l3 3 3-3"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-      {open &&
-        position &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div
-            ref={menuRef}
-            role="listbox"
-            style={{
-              position: "fixed",
-              top: position.top,
-              left: position.left,
-              width: position.width,
-            }}
-            className="z-50 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
-          >
-            {IMPACT_OPTIONS.map((opt) => {
-              const selected = opt === value;
-              return (
-                <button
-                  key={opt}
-                  type="button"
-                  role="option"
-                  aria-selected={selected}
-                  onClick={() => {
-                    setOpen(false);
-                    if (!selected) onChange(opt);
-                  }}
-                  className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-sm hover:bg-slate-50 ${
-                    selected
-                      ? "font-medium text-slate-900"
-                      : "text-slate-700"
-                  }`}
-                >
-                  <span className="tabular-nums">{opt}</span>
-                  {selected && (
-                    <svg
-                      className="h-3 w-3 text-slate-700"
-                      viewBox="0 0 12 12"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M3 6.5l2 2 4-4"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                </button>
-              );
-            })}
-          </div>,
-          document.body,
-        )}
-    </>
-  );
-}
-
 // ──────────────────────────────────────────────────────────────── Row menu ──
 
 // The menu is rendered into document.body via a portal because the table is
@@ -787,7 +661,13 @@ const MENU_WIDTH = 160; // matches w-40 used below
 const MENU_HEIGHT_ESTIMATE = 80; // Edit + Delete rows + py-1; only used for the flip decision
 const MENU_GAP = 4;
 
-function RowMenu({ onDelete }: { onDelete: () => void }) {
+function RowMenu({
+  onDelete,
+  onEdit,
+}: {
+  onDelete: () => void;
+  onEdit: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -868,11 +748,13 @@ function RowMenu({ onDelete }: { onDelete: () => void }) {
             <button
               type="button"
               role="menuitem"
-              disabled
-              title="Coming in Step 6"
-              className="block w-full px-3 py-1.5 text-left text-sm text-slate-400"
+              onClick={() => {
+                setOpen(false);
+                onEdit();
+              }}
+              className="block w-full px-3 py-1.5 text-left text-sm text-slate-700 hover:bg-slate-50"
             >
-              Edit (soon)
+              Edit
             </button>
             <button
               type="button"
