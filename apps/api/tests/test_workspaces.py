@@ -119,14 +119,6 @@ def test_create_workspace_reuses_existing_user(client):
     assert first.json()["owner_id"] == second.json()["owner_id"]
 
 
-def test_create_workspace_rejects_invalid_email(client):
-    response = client.post(
-        "/v1/workspaces",
-        json={"name": "Bad email", "owner_email": "not-an-email"},
-    )
-    assert response.status_code == 422
-
-
 def test_create_workspace_rejects_blank_name(client):
     response = client.post(
         "/v1/workspaces",
@@ -135,29 +127,34 @@ def test_create_workspace_rejects_blank_name(client):
     assert response.status_code == 422
 
 
-def test_list_workspaces_filter_by_owner(client):
-    client.post("/v1/workspaces", json={"name": "Alice WS", "owner_email": "alice@example.com"})
-    client.post("/v1/workspaces", json={"name": "Bob WS", "owner_email": "bob@example.com"})
-
-    response = client.get("/v1/workspaces", params={"owner_email": "alice@example.com"})
+def test_list_workspaces_returns_only_current_users_workspaces(client, client_as):
+    """Listing is scoped to the authenticated user — alice's workspace
+    must not appear when bob is making the request."""
+    with client_as(client, "alice@example.com") as alice:
+        alice.post("/v1/workspaces", json={"name": "Alice WS"})
+    with client_as(client, "bob@example.com") as bob:
+        bob.post("/v1/workspaces", json={"name": "Bob WS"})
+        response = bob.get("/v1/workspaces")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 1
-    assert data[0]["name"] == "Alice WS"
+    assert [w["name"] for w in data] == ["Bob WS"]
 
 
-def test_list_workspaces_returns_all_without_filter(client):
-    client.post("/v1/workspaces", json={"name": "Alice WS", "owner_email": "alice@example.com"})
-    client.post("/v1/workspaces", json={"name": "Bob WS", "owner_email": "bob@example.com"})
+def test_list_workspaces_returns_all_owned(client):
+    client.post("/v1/workspaces", json={"name": "WS 1"})
+    client.post("/v1/workspaces", json={"name": "WS 2"})
 
     response = client.get("/v1/workspaces")
     assert response.status_code == 200
     assert len(response.json()) == 2
 
 
-def test_list_workspaces_unknown_owner_returns_empty(client):
-    client.post("/v1/workspaces", json={"name": "Some WS", "owner_email": "alice@example.com"})
-    response = client.get("/v1/workspaces", params={"owner_email": "nobody@example.com"})
+def test_list_workspaces_empty_for_user_with_none(client, client_as):
+    """A fresh user identity sees zero workspaces, regardless of what
+    other users have created."""
+    client.post("/v1/workspaces", json={"name": "Default user WS"})
+    with client_as(client, "newcomer@example.com") as newcomer:
+        response = newcomer.get("/v1/workspaces")
     assert response.status_code == 200
     assert response.json() == []
 

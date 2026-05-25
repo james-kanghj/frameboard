@@ -25,11 +25,10 @@ def create_workspace(
     db: Session,
     *,
     name: str,
-    owner_email: str,
+    owner_id: UUID,
     framework: str = "RICE",
 ) -> Workspace:
-    owner = get_or_create_user(db, owner_email)
-    workspace = Workspace(name=name, owner_id=owner.id, framework=framework)
+    workspace = Workspace(name=name, owner_id=owner_id, framework=framework)
     db.add(workspace)
     db.commit()
     db.refresh(workspace)
@@ -57,10 +56,12 @@ def update_workspace(
     return workspace
 
 
-def list_workspaces(db: Session, *, owner_email: str | None = None) -> list[Workspace]:
-    stmt = select(Workspace).order_by(Workspace.created_at.desc())
-    if owner_email is not None:
-        stmt = stmt.join(User, Workspace.owner_id == User.id).where(User.email == owner_email)
+def list_workspaces(db: Session, *, owner_id: UUID) -> list[Workspace]:
+    stmt = (
+        select(Workspace)
+        .where(Workspace.owner_id == owner_id)
+        .order_by(Workspace.created_at.desc())
+    )
     return list(db.execute(stmt).scalars().all())
 
 

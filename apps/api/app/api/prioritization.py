@@ -8,10 +8,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
+from app.api.deps import CurrentUser, require_workspace_owner
 from app.crud import backlog_item as item_crud
 from app.crud import item_score as item_score_crud
 from app.crud import rice_score as rice_crud
-from app.crud import workspace as workspace_crud
+from app.db.session import get_db
+from app.models.backlog_item import BacklogItem
+from app.models.workspace import Workspace
 from app.schemas.backlog_item import BacklogItemRead
 from app.schemas.prioritization import (
     ICEScoreRequest,
@@ -21,14 +24,28 @@ from app.schemas.prioritization import (
 from app.schemas.score import ScoreRead, ScoreRequest, validate_inputs
 from app.services.frameworks import SUPPORTED_FRAMEWORKS
 from app.services.score_engine import compute as compute_score
-from app.db.session import get_db
 
 router = APIRouter()
+
+
+def _load_owned_item(
+    db: Session, *, item_id: UUID, current_user_id: UUID
+) -> BacklogItem:
+    """Same pattern as items._load_owned_item — duplicated to avoid a
+    cross-router import. Resolves the item and asserts the current user
+    owns its parent workspace."""
+    item = item_crud.get_item(db, item_id)
+    if item is None or item.workspace.owner_id != current_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
+        )
+    return item
 
 
 @router.post("/score/rice", response_model=PrioritizationResult)
 def score_rice(
     payload: RICEScoreRequest,
+    current_user: CurrentUser,
     db: Session = Depends(get_db),
 ) -> PrioritizationResult:
     """RICE-specific endpoint kept for backward compatibility. The unified
@@ -40,10 +57,7 @@ def score_rice(
     - Confidence: 0.0–1.0
     - Effort: person-months (must be > 0)
     """
-    if item_crud.get_item(db, payload.item_id) is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
+    _load_owned_item(db, item_id=payload.item_id, current_user_id=current_user.id)
     rice = rice_crud.upsert_rice_score(
         db,
         item_id=payload.item_id,
@@ -68,17 +82,14 @@ def score_rice(
 @router.post("/score", response_model=ScoreRead)
 def score_item(
     payload: ScoreRequest,
+    current_user: CurrentUser,
     db: Session = Depends(get_db),
 ) -> ScoreRead:
     """Unified scoring endpoint. Validates inputs against the per-framework
     schema, computes the numeric score, and upserts in either `rice_scores`
     (for RICE — to keep the legacy board path consistent) or `item_scores`
-    (for ICE / MoSCoW / ValueEffort). Returns the persisted score envelope
-    so the client can render without a follow-up read."""
-    if item_crud.get_item(db, payload.item_id) is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
+    (for ICE / MoSCoW / ValueEffort)."""
+    _load_owned_item(db, item_id=payload.item_id, current_user_id=current_user.id)
     try:
         normalised = validate_inputs(payload.framework, payload.inputs)
     except ValidationError as e:
@@ -93,9 +104,6 @@ def score_item(
     score_value = compute_score(payload.framework, normalised)
 
     if payload.framework == "RICE":
-        # Land in the legacy table so the existing board read path
-        # continues to work unchanged. Inputs were validated above so the
-        # dict access is safe.
         rice = rice_crud.upsert_rice_score(
             db,
             item_id=payload.item_id,
@@ -126,7 +134,8 @@ def score_item(
 def score_ice(payload: ICEScoreRequest) -> PrioritizationResult:
     """Legacy lightweight ICE calculator — not persisted. The unified
     `POST /v1/score` with `framework: "ICE"` persists per-item and is
-    preferred for new clients."""
+    preferred for new clients. No auth required because nothing leaves
+    or enters the DB."""
     score = payload.impact * payload.confidence * payload.ease
     return PrioritizationResult(
         framework="ICE",
@@ -142,33 +151,24 @@ def score_ice(payload: ICEScoreRequest) -> PrioritizationResult:
 
 @router.get("/workspaces/{workspace_id}/board", response_model=list[BacklogItemRead])
 def get_board(
-    workspace_id: UUID,
+    workspace: Workspace = Depends(require_workspace_owner),
     db: Session = Depends(get_db),
 ) -> list[BacklogItemRead]:
     """Board view: workspace items ordered by score DESC for the workspace's
     framework, with unscored items at the end (by created_at ASC). RICE
     workspaces read from `rice_scores`; the other frameworks read from the
     polymorphic `item_scores` table."""
-    workspace = workspace_crud.get_workspace(db, workspace_id)
-    if workspace is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found"
-        )
-
     if workspace.framework == "RICE":
-        # Existing path — already returns items with rice_score populated.
-        return rice_crud.list_board(db, workspace_id=workspace_id)
+        return rice_crud.list_board(db, workspace_id=workspace.id)
 
-    items = item_crud.list_items(db, workspace_id=workspace_id)
+    items = item_crud.list_items(db, workspace_id=workspace.id)
     scores_map = item_score_crud.list_scores_for_workspace(
         db,
-        workspace_id=workspace_id,
+        workspace_id=workspace.id,
         framework=workspace.framework,
     )
 
     def sort_key(it):
-        # Scored items come first, sorted by score DESC; unscored fall
-        # back to created_at ASC. Mirrors the RICE board ordering.
         row = scores_map.get(it.id)
         if row is None:
             return (1, 0, it.created_at)
@@ -187,9 +187,6 @@ def get_board(
                 tags=it.tags,
                 created_at=it.created_at,
                 updated_at=it.updated_at,
-                # In a non-RICE workspace, the legacy rice_score field
-                # stays empty even if the item has historic RICE data —
-                # board view follows the workspace's current framework.
                 rice_score=None,
                 score=ScoreRead.model_validate(score_row) if score_row else None,
             )
@@ -198,34 +195,30 @@ def get_board(
 
 
 @router.delete("/items/{item_id}/rice", status_code=status.HTTP_204_NO_CONTENT)
-def delete_item_rice(item_id: UUID, db: Session = Depends(get_db)) -> None:
+def delete_item_rice(
+    item_id: UUID,
+    current_user: CurrentUser,
+    db: Session = Depends(get_db),
+) -> None:
     """Reset an item back to 'unscored' under RICE. Idempotent on unscored
-    items, 404 if the item itself doesn't exist."""
-    if item_crud.get_item(db, item_id) is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
+    items, 404 if the item doesn't exist or isn't owned."""
+    _load_owned_item(db, item_id=item_id, current_user_id=current_user.id)
     rice_crud.delete_rice_score(db, item_id)
 
 
 @router.delete("/items/{item_id}/score", status_code=status.HTTP_204_NO_CONTENT)
 def delete_item_polymorphic_score(
     item_id: UUID,
+    current_user: CurrentUser,
     framework: str = Query(..., description="Framework to clear: ICE | MoSCoW | ValueEffort | RICE"),
     db: Session = Depends(get_db),
 ) -> None:
-    """Unified score-clear. For RICE delegates to the legacy delete so the
-    existing item_history hooks fire correctly; for other frameworks
-    removes the matching item_scores row."""
     if framework not in SUPPORTED_FRAMEWORKS:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"framework must be one of {SUPPORTED_FRAMEWORKS}",
         )
-    if item_crud.get_item(db, item_id) is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
-        )
+    _load_owned_item(db, item_id=item_id, current_user_id=current_user.id)
     if framework == "RICE":
         rice_crud.delete_rice_score(db, item_id)
         return
