@@ -4,7 +4,8 @@ export const runtime = "edge";
 
 import { redirect } from "next/navigation";
 
-import { auth, signIn } from "@/auth";
+import { auth } from "@/auth";
+import { signInWithGitHub } from "@/auth-actions";
 
 interface Props {
   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
@@ -30,14 +31,6 @@ export default async function SignInPage({ searchParams }: Props) {
 
   const showError = Boolean(params.error);
 
-  // Server Action that triggers the GitHub OAuth flow. Keeping the
-  // sign-in trigger as a form post means no client-side JS is needed
-  // to start the login.
-  async function signInWithGitHub() {
-    "use server";
-    await signIn("github", { redirectTo: callbackUrl });
-  }
-
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">
       <div className="space-y-6">
@@ -61,6 +54,10 @@ export default async function SignInPage({ searchParams }: Props) {
         )}
 
         <form action={signInWithGitHub}>
+          {/* The action reads `callbackUrl` off FormData instead of
+              capturing it via closure, so we round-trip it through a
+              hidden input. */}
+          <input type="hidden" name="callbackUrl" value={callbackUrl} />
           <button
             type="submit"
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700"
