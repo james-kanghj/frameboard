@@ -1,7 +1,10 @@
+import { notFound } from "next/navigation";
 import Link from "next/link";
 
+import type { BacklogItem, Workspace } from "@frameboard/shared";
+
 import { RICEBoard } from "@/components/RICEBoard";
-import { getWorkspace, getWorkspaceBoard } from "@/lib/api";
+import { ApiError, getWorkspace, getWorkspaceBoard } from "@/lib/api";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -9,10 +12,23 @@ interface PageProps {
 
 export default async function WorkspaceBoardPage({ params }: PageProps) {
   const { id } = await params;
-  const [workspace, items] = await Promise.all([
-    getWorkspace(id),
-    getWorkspaceBoard(id),
-  ]);
+
+  // Translate backend 404s into Next's notFound() so the user gets the
+  // standard not-found page rather than a generic error. Other failures
+  // (backend down, 500s) still bubble up to the error boundary.
+  let workspace: Workspace;
+  let items: BacklogItem[];
+  try {
+    [workspace, items] = await Promise.all([
+      getWorkspace(id),
+      getWorkspaceBoard(id),
+    ]);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) {
+      notFound();
+    }
+    throw err;
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-10">

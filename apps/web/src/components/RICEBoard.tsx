@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import {
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type Dispatch,
@@ -44,6 +45,11 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
     setItems(initialItems);
   }, [initialItems]);
 
+  // Derived view: re-sort by score so optimistic score updates re-rank rows
+  // live, without waiting for a router.refresh round-trip. Mirrors the
+  // server's board ordering: score DESC (nulls last), then created_at ASC.
+  const sortedItems = useMemo(() => sortByScore(items), [items]);
+
   const pushToast: ToastPusher = (tone, message) => {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, tone, message }]);
@@ -77,12 +83,15 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
         {items.length === 0 ? (
           <EmptyState onAdd={() => setAddOpen(true)} />
         ) : (
-          <BoardTable
-            items={items}
-            setItems={setItems}
-            pushToast={pushToast}
-            refresh={() => router.refresh()}
-          />
+          <div className="space-y-4">
+            <MetricLegend />
+            <BoardTable
+              items={sortedItems}
+              setItems={setItems}
+              pushToast={pushToast}
+              refresh={() => router.refresh()}
+            />
+          </div>
         )}
       </div>
 
@@ -101,6 +110,33 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
 
       <ToastStack toasts={toasts} />
     </section>
+  );
+}
+
+// ───────────────────────────────────────────────────────────── Metric legend ──
+
+// Compact key shown above the table so newcomers know what each column
+// means without hunting for docs. Echoes the uppercase column headers in
+// the table itself so the connection is visual.
+function MetricLegend() {
+  const entries: { term: string; def: string }[] = [
+    { term: "Reach", def: "People affected per period" },
+    { term: "Impact", def: "0.25 (min) → 3 (massive)" },
+    { term: "Confidence", def: "0.0 – 1.0 belief" },
+    { term: "Effort", def: "Person-months (> 0)" },
+    { term: "Score", def: "(Reach × Impact × Confidence) / Effort" },
+  ];
+  return (
+    <dl className="grid grid-cols-2 gap-x-5 gap-y-3 rounded-xl border border-slate-200 bg-slate-50/50 px-5 py-4 text-xs sm:grid-cols-3 lg:grid-cols-5">
+      {entries.map(({ term, def }) => (
+        <div key={term} className="space-y-0.5">
+          <dt className="font-semibold uppercase tracking-wider text-slate-500">
+            {term}
+          </dt>
+          <dd className="text-slate-600">{def}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -344,17 +380,10 @@ function ScoredCells({
         onSave={(v) => onChangeField("reach", v)}
       />
       <td className="px-3 py-2">
-        <select
+        <ImpactSelect
           value={impact}
-          onChange={(e) => onChangeField("impact", Number(e.target.value))}
-          className="w-full rounded border border-slate-200 bg-white px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
-        >
-          {IMPACT_OPTIONS.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
+          onChange={(v) => onChangeField("impact", v)}
+        />
       </td>
       <EditableNumberCell
         value={confidence}
@@ -459,17 +488,7 @@ function ScoringFormCells({
         />
       </td>
       <td className="px-3 py-2">
-        <select
-          value={impact}
-          onChange={(e) => setImpact(Number(e.target.value) as RICEImpact)}
-          className="w-full rounded border border-slate-200 bg-white px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
-        >
-          {IMPACT_OPTIONS.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
+        <ImpactSelect value={impact} onChange={setImpact} />
       </td>
       <td className="px-3 py-2 text-right">
         <input
@@ -599,6 +618,163 @@ function EditableNumberCell({
 // uniformly sized across columns regardless of cell width.
 const inlineInputClasses =
   "w-20 sm:w-24 rounded border border-slate-300 bg-white px-2 py-1 text-right text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
+
+// ─────────────────────────────────────────────────────────── Impact select ──
+
+// Native <select> on macOS renders the OS dark dropdown, which looks out of
+// place against the slate-themed table. Custom dropdown using the same
+// portal trick as RowMenu (table wrapper's overflow-x-auto would otherwise
+// clip an in-tree absolute menu). Width tracks the trigger, height-aware
+// flip when there's not enough room below.
+const IMPACT_MENU_HEIGHT_ESTIMATE = 200; // 5 options × ~32 px + padding
+const IMPACT_MENU_GAP = 4;
+
+function ImpactSelect({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: number;
+  onChange: (next: RICEImpact) => void;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<
+    { top: number; left: number; width: number } | null
+  >(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUpward =
+      spaceBelow < IMPACT_MENU_HEIGHT_ESTIMATE + IMPACT_MENU_GAP;
+    setPosition({
+      top: openUpward
+        ? rect.top - IMPACT_MENU_HEIGHT_ESTIMATE - IMPACT_MENU_GAP
+        : rect.bottom + IMPACT_MENU_GAP,
+      left: rect.left,
+      width: rect.width,
+    });
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onClickAway(e: MouseEvent) {
+      if (
+        buttonRef.current?.contains(e.target as Node) ||
+        menuRef.current?.contains(e.target as Node)
+      ) {
+        return;
+      }
+      setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    function onReposition() {
+      setOpen(false);
+    }
+    document.addEventListener("mousedown", onClickAway);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onReposition, true);
+    window.addEventListener("resize", onReposition);
+    return () => {
+      document.removeEventListener("mousedown", onClickAway);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onReposition, true);
+      window.removeEventListener("resize", onReposition);
+    };
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="flex w-full items-center justify-between rounded border border-slate-200 bg-white px-2 py-1 text-left text-sm hover:bg-slate-50 focus:border-slate-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <span className="tabular-nums text-slate-900">{value}</span>
+        <svg
+          className={`h-3 w-3 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
+          viewBox="0 0 12 12"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M3 5l3 3 3-3"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+      {open &&
+        position &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="listbox"
+            style={{
+              position: "fixed",
+              top: position.top,
+              left: position.left,
+              width: position.width,
+            }}
+            className="z-50 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+          >
+            {IMPACT_OPTIONS.map((opt) => {
+              const selected = opt === value;
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => {
+                    setOpen(false);
+                    if (!selected) onChange(opt);
+                  }}
+                  className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-sm hover:bg-slate-50 ${
+                    selected
+                      ? "font-medium text-slate-900"
+                      : "text-slate-700"
+                  }`}
+                >
+                  <span className="tabular-nums">{opt}</span>
+                  {selected && (
+                    <svg
+                      className="h-3 w-3 text-slate-700"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M3 6.5l2 2 4-4"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>,
+          document.body,
+        )}
+    </>
+  );
+}
 
 // ──────────────────────────────────────────────────────────────── Row menu ──
 
@@ -867,4 +1043,21 @@ function computeScore(
 ): number {
   if (effort <= 0) return 0;
   return Math.round(((reach * impact * confidence) / effort) * 100) / 100;
+}
+
+// Mirrors the backend's list_board ordering: scored items by score DESC,
+// unscored items at the bottom; ties broken by created_at ASC so rank is
+// deterministic on the client between server-refresh boundaries.
+function sortByScore(items: BacklogItem[]): BacklogItem[] {
+  return [...items].sort((a, b) => {
+    const aScore = a.riceScore?.score ?? null;
+    const bScore = b.riceScore?.score ?? null;
+    if (aScore !== null && bScore !== null) {
+      if (bScore !== aScore) return bScore - aScore;
+      return a.createdAt.localeCompare(b.createdAt);
+    }
+    if (aScore !== null) return -1;
+    if (bScore !== null) return 1;
+    return a.createdAt.localeCompare(b.createdAt);
+  });
 }
