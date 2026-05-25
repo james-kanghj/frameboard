@@ -111,6 +111,9 @@ See [docs/SETUP.md](docs/SETUP.md) for the full guide, including notes on port c
 - [x] End-to-end smoke tests (Playwright, 5 scenarios)
 - [x] CI pipeline (web + api + e2e jobs)
 - [x] Public hosted instance ([frameboard.pages.dev](https://frameboard.pages.dev))
+- [x] Score distribution chart (top-N horizontal bars above the table)
+- [ ] Effort × Score scatter plot (PM-style 2×2 quadrant)
+- [ ] Score history / change-log timeline per item
 - [ ] ICE / MoSCoW / Value-vs-Effort frameworks
 - [ ] Collaborative scoring with disagreement visualization
 - [ ] Jira / Linear / Notion export
