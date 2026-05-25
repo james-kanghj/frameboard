@@ -1,6 +1,6 @@
 // /apps/web/src/app/auth/signin/page.tsx
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 import { redirect } from "next/navigation";
 

@@ -5,7 +5,7 @@
 // calling the FastAPI backend. The cookie itself is HTTP-only (set by
 // NextAuth) so JS can't read it — this endpoint is the bridge.
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 import { cookies } from "next/headers";
 
