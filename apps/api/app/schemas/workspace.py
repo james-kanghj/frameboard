@@ -5,7 +5,13 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+
+from app.services.frameworks import (
+    DEFAULT_FRAMEWORK,
+    SUPPORTED_FRAMEWORKS,
+    Framework,
+)
 
 
 class UserRead(BaseModel):
@@ -20,6 +26,21 @@ class UserRead(BaseModel):
 class WorkspaceCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=120)
     owner_email: EmailStr
+    framework: Framework = DEFAULT_FRAMEWORK
+
+
+class WorkspaceUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    framework: Framework | None = None
+
+    @field_validator("framework")
+    @classmethod
+    def _check_framework(cls, v: str | None) -> str | None:
+        if v is not None and v not in SUPPORTED_FRAMEWORKS:
+            raise ValueError(
+                f"framework must be one of {SUPPORTED_FRAMEWORKS}"
+            )
+        return v
 
 
 class WorkspaceRead(BaseModel):
@@ -27,6 +48,7 @@ class WorkspaceRead(BaseModel):
 
     id: UUID
     name: str
+    framework: Framework
     owner_id: UUID
     created_at: datetime
     updated_at: datetime

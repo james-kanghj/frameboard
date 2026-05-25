@@ -21,10 +21,37 @@ def get_or_create_user(db: Session, email: str) -> User:
     return user
 
 
-def create_workspace(db: Session, *, name: str, owner_email: str) -> Workspace:
+def create_workspace(
+    db: Session,
+    *,
+    name: str,
+    owner_email: str,
+    framework: str = "RICE",
+) -> Workspace:
     owner = get_or_create_user(db, owner_email)
-    workspace = Workspace(name=name, owner_id=owner.id)
+    workspace = Workspace(name=name, owner_id=owner.id, framework=framework)
     db.add(workspace)
+    db.commit()
+    db.refresh(workspace)
+    return workspace
+
+
+def update_workspace(
+    db: Session,
+    *,
+    workspace_id: UUID,
+    name: str | None = None,
+    framework: str | None = None,
+) -> Workspace | None:
+    """Partial update — None fields are left alone. Returns None if the
+    workspace doesn't exist so the router can 404."""
+    workspace = db.get(Workspace, workspace_id)
+    if workspace is None:
+        return None
+    if name is not None:
+        workspace.name = name
+    if framework is not None:
+        workspace.framework = framework
     db.commit()
     db.refresh(workspace)
     return workspace

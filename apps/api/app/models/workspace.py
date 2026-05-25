@@ -13,6 +13,12 @@ class Workspace(Base):
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
+    # One of SUPPORTED_FRAMEWORKS (RICE / ICE / MoSCoW / ValueEffort).
+    # Determines which score type the board endpoint surfaces and which
+    # inputs the edit modal renders. Validation lives in the schema.
+    framework: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="RICE"
+    )
     owner_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )

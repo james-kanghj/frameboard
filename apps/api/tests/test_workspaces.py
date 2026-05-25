@@ -17,6 +17,82 @@ def test_create_workspace(client):
     assert "owner_id" in data
     assert "created_at" in data
     assert "updated_at" in data
+    # Framework defaults to RICE when not explicitly set.
+    assert data["framework"] == "RICE"
+
+
+def test_create_workspace_with_explicit_framework(client):
+    response = client.post(
+        "/v1/workspaces",
+        json={
+            "name": "ICE Lab",
+            "owner_email": "alice@example.com",
+            "framework": "ICE",
+        },
+    )
+    assert response.status_code == 201
+    assert response.json()["framework"] == "ICE"
+
+
+def test_create_workspace_rejects_unknown_framework(client):
+    response = client.post(
+        "/v1/workspaces",
+        json={
+            "name": "Bad",
+            "owner_email": "alice@example.com",
+            "framework": "PIE",
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_patch_workspace_changes_framework(client):
+    created = client.post(
+        "/v1/workspaces",
+        json={"name": "WS", "owner_email": "alice@example.com"},
+    )
+    ws_id = created.json()["id"]
+    assert created.json()["framework"] == "RICE"
+
+    response = client.patch(
+        f"/v1/workspaces/{ws_id}", json={"framework": "MoSCoW"}
+    )
+    assert response.status_code == 200
+    assert response.json()["framework"] == "MoSCoW"
+    # Name preserved.
+    assert response.json()["name"] == "WS"
+
+
+def test_patch_workspace_changes_name(client):
+    created = client.post(
+        "/v1/workspaces",
+        json={"name": "Old", "owner_email": "alice@example.com"},
+    )
+    ws_id = created.json()["id"]
+
+    response = client.patch(f"/v1/workspaces/{ws_id}", json={"name": "New"})
+    assert response.status_code == 200
+    assert response.json()["name"] == "New"
+    assert response.json()["framework"] == "RICE"
+
+
+def test_patch_workspace_404(client):
+    response = client.patch(
+        f"/v1/workspaces/{NIL_UUID}", json={"framework": "ICE"}
+    )
+    assert response.status_code == 404
+
+
+def test_patch_workspace_rejects_unknown_framework(client):
+    created = client.post(
+        "/v1/workspaces",
+        json={"name": "WS", "owner_email": "alice@example.com"},
+    )
+    ws_id = created.json()["id"]
+    response = client.patch(
+        f"/v1/workspaces/{ws_id}", json={"framework": "BOGUS"}
+    )
+    assert response.status_code == 422
 
 
 def test_create_workspace_creates_user_on_the_fly(client):

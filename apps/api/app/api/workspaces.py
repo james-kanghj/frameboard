@@ -11,7 +11,7 @@ from app.crud import backlog_item as item_crud
 from app.crud import workspace as workspace_crud
 from app.db.session import get_db
 from app.schemas.backlog_item import BacklogItemCreate, BacklogItemRead
-from app.schemas.workspace import WorkspaceCreate, WorkspaceRead
+from app.schemas.workspace import WorkspaceCreate, WorkspaceRead, WorkspaceUpdate
 
 router = APIRouter(prefix="/workspaces")
 
@@ -22,8 +22,26 @@ def create_workspace(
     db: Session = Depends(get_db),
 ) -> WorkspaceRead:
     workspace = workspace_crud.create_workspace(
-        db, name=payload.name, owner_email=payload.owner_email
+        db,
+        name=payload.name,
+        owner_email=payload.owner_email,
+        framework=payload.framework,
     )
+    return workspace
+
+
+@router.patch("/{workspace_id}", response_model=WorkspaceRead)
+def update_workspace(
+    workspace_id: UUID,
+    payload: WorkspaceUpdate,
+    db: Session = Depends(get_db),
+) -> WorkspaceRead:
+    fields = payload.model_dump(exclude_unset=True)
+    workspace = workspace_crud.update_workspace(db, workspace_id=workspace_id, **fields)
+    if workspace is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found"
+        )
     return workspace
 
 
