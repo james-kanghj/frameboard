@@ -140,8 +140,8 @@ See [docs/SETUP.md](docs/SETUP.md) for the full guide, including notes on port c
 - [x] Effort × Score scatter plot (PM-style 2×2 quadrant, tab-toggled with the bar chart)
 - [x] Board search — title + description, with URL state (`?q=`)
 - [x] Board status filter — All / Scored / Unscored segmented toggle (URL `?status=`)
+- [x] Board quick-wins filter — effort + score bucket chips (URL `?effort=` `?score=`)
 - [ ] Score history / change-log timeline per item
-- [ ] Board quick-wins filter — effort threshold + score-range chips
 - [ ] Item tags / categories — schema addition + tag filter UI
 - [ ] ICE / MoSCoW / Value-vs-Effort frameworks
 - [ ] Collaborative scoring with disagreement visualization

@@ -37,6 +37,33 @@ type ToastPusher = (tone: ToastTone, message: string) => void;
 type ItemsSetter = Dispatch<SetStateAction<BacklogItem[]>>;
 type FilterStatus = "all" | "scored" | "unscored";
 type ChartView = "bars" | "scatter";
+type EffortBucket = "all" | "quick" | "medium" | "big";
+type ScoreBucket = "all" | "high" | "medium" | "low";
+
+// PM-friendly buckets. Thresholds chosen against the current dataset
+// (range 0.5–20 person-months, score 20–3600) so each bucket holds a
+// non-empty slice for typical roadmaps.
+const EFFORT_BUCKETS: ReadonlyArray<{
+  value: EffortBucket;
+  label: string;
+  test: (effort: number) => boolean;
+}> = [
+  { value: "all", label: "Any", test: () => true },
+  { value: "quick", label: "Quick (≤3)", test: (e) => e <= 3 },
+  { value: "medium", label: "Medium (4–7)", test: (e) => e > 3 && e <= 7 },
+  { value: "big", label: "Big (≥8)", test: (e) => e >= 8 },
+];
+
+const SCORE_BUCKETS: ReadonlyArray<{
+  value: ScoreBucket;
+  label: string;
+  test: (score: number) => boolean;
+}> = [
+  { value: "all", label: "Any", test: () => true },
+  { value: "high", label: "High (>1000)", test: (s) => s > 1000 },
+  { value: "medium", label: "Med (200–1000)", test: (s) => s >= 200 && s <= 1000 },
+  { value: "low", label: "Low (<200)", test: (s) => s < 200 },
+];
 
 export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
   const router = useRouter();
@@ -63,6 +90,16 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
       : "all";
   const viewParam = searchParams.get("view");
   const view: ChartView = viewParam === "scatter" ? "scatter" : "bars";
+  const effortParam = searchParams.get("effort");
+  const effort: EffortBucket =
+    effortParam === "quick" || effortParam === "medium" || effortParam === "big"
+      ? effortParam
+      : "all";
+  const scoreParam = searchParams.get("score");
+  const scoreBucket: ScoreBucket =
+    scoreParam === "high" || scoreParam === "medium" || scoreParam === "low"
+      ? scoreParam
+      : "all";
 
   const setQueryParam = useCallback(
     (key: string, value: string, defaultValue: string) => {
@@ -82,6 +119,8 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
     const next = new URLSearchParams(searchParams.toString());
     next.delete("q");
     next.delete("status");
+    next.delete("effort");
+    next.delete("score");
     const qs = next.toString();
     router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
   }, [searchParams, router, pathname]);
@@ -106,10 +145,24 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
     } else if (status === "unscored") {
       result = result.filter((it) => it.riceScore === null);
     }
+    // Effort / score buckets only apply to scored items — an unscored item
+    // has no effort or score to bucket against.
+    if (effort !== "all" || scoreBucket !== "all") {
+      const effortTest = EFFORT_BUCKETS.find((b) => b.value === effort)!.test;
+      const scoreTest = SCORE_BUCKETS.find((b) => b.value === scoreBucket)!.test;
+      result = result.filter((it) => {
+        if (!it.riceScore) return false;
+        return effortTest(it.riceScore.effort) && scoreTest(it.riceScore.score);
+      });
+    }
     return result;
-  }, [sortedItems, search, status]);
+  }, [sortedItems, search, status, effort, scoreBucket]);
 
-  const filterActive = search.trim().length > 0 || status !== "all";
+  const filterActive =
+    search.trim().length > 0 ||
+    status !== "all" ||
+    effort !== "all" ||
+    scoreBucket !== "all";
 
   const pushToast: ToastPusher = (tone, message) => {
     const id = Date.now() + Math.random();
@@ -150,8 +203,12 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
             <FilterBar
               search={search}
               status={status}
+              effort={effort}
+              scoreBucket={scoreBucket}
               onSearchChange={(v) => setQueryParam("q", v, "")}
               onStatusChange={(v) => setQueryParam("status", v, "all")}
+              onEffortChange={(v) => setQueryParam("effort", v, "all")}
+              onScoreBucketChange={(v) => setQueryParam("score", v, "all")}
               onClear={clearFilters}
               filterActive={filterActive}
             />
@@ -214,15 +271,23 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
 function FilterBar({
   search,
   status,
+  effort,
+  scoreBucket,
   onSearchChange,
   onStatusChange,
+  onEffortChange,
+  onScoreBucketChange,
   onClear,
   filterActive,
 }: {
   search: string;
   status: FilterStatus;
+  effort: EffortBucket;
+  scoreBucket: ScoreBucket;
   onSearchChange: (value: string) => void;
   onStatusChange: (value: FilterStatus) => void;
+  onEffortChange: (value: EffortBucket) => void;
+  onScoreBucketChange: (value: ScoreBucket) => void;
   onClear: () => void;
   filterActive: boolean;
 }) {
@@ -232,63 +297,122 @@ function FilterBar({
     { value: "unscored", label: "Unscored" },
   ];
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 items-center gap-2">
-        <div className="relative flex-1 sm:max-w-md">
-          <svg
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden="true"
-          >
-            <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
-            <path
-              d="M10.5 10.5L14 14"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search title or description…"
-            className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
-            aria-label="Search items"
-          />
-        </div>
-        <div
-          role="group"
-          aria-label="Filter by status"
-          className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5"
-        >
-          {statusOptions.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              aria-pressed={status === opt.value}
-              onClick={() => onStatusChange(opt.value)}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition ${
-                status === opt.value
-                  ? "bg-slate-900 text-white"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
+    <div className="space-y-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 items-center gap-2">
+          <div className="relative flex-1 sm:max-w-md">
+            <svg
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
             >
-              {opt.label}
-            </button>
-          ))}
+              <circle
+                cx="7"
+                cy="7"
+                r="4.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M10.5 10.5L14 14"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search title or description…"
+              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+              aria-label="Search items"
+            />
+          </div>
+          <div
+            role="group"
+            aria-label="Filter by status"
+            className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5"
+          >
+            {statusOptions.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                aria-pressed={status === opt.value}
+                onClick={() => onStatusChange(opt.value)}
+                className={`rounded-md px-3 py-1 text-xs font-medium transition ${
+                  status === opt.value
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
+        {filterActive && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="self-start rounded-md px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-700 sm:self-auto"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
-      {filterActive && (
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+        <ChipGroup
+          label="Effort"
+          ariaLabel="Filter by effort bucket"
+          value={effort}
+          onChange={onEffortChange}
+          options={EFFORT_BUCKETS.map((b) => ({ value: b.value, label: b.label }))}
+        />
+        <ChipGroup
+          label="Score"
+          ariaLabel="Filter by score bucket"
+          value={scoreBucket}
+          onChange={onScoreBucketChange}
+          options={SCORE_BUCKETS.map((b) => ({ value: b.value, label: b.label }))}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ChipGroup<T extends string>({
+  label,
+  ariaLabel,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  ariaLabel: string;
+  value: T;
+  options: ReadonlyArray<{ value: T; label: string }>;
+  onChange: (next: T) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={ariaLabel}>
+      <span className="text-slate-500">{label}:</span>
+      {options.map((opt) => (
         <button
+          key={opt.value}
           type="button"
-          onClick={onClear}
-          className="self-start rounded-md px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-700 sm:self-auto"
+          aria-pressed={value === opt.value}
+          onClick={() => onChange(opt.value)}
+          className={`rounded-full border px-2.5 py-0.5 font-medium transition ${
+            value === opt.value
+              ? "border-slate-900 bg-slate-900 text-white"
+              : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
+          }`}
         >
-          Clear filters
+          {opt.label}
         </button>
-      )}
+      ))}
     </div>
   );
 }
