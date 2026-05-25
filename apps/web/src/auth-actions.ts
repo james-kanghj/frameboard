@@ -11,7 +11,7 @@
 
 "use server";
 
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 
 export async function signInWithGitHub(formData: FormData) {
   const raw = formData.get("callbackUrl");
@@ -19,4 +19,11 @@ export async function signInWithGitHub(formData: FormData) {
     ? raw
     : "/workspaces";
   await signIn("github", { redirectTo: callbackUrl });
+}
+
+// Clears the NextAuth session cookie and bounces back to the landing
+// page. Server Action (not an inline `signOut()` call in a client
+// component) because NextAuth v5 needs server-side cookie mutation.
+export async function signOutAction() {
+  await signOut({ redirectTo: "/" });
 }

@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+
+import { UserBadge } from "@/components/UserBadge";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,6 +18,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-white text-slate-900 antialiased">
+        {/* UserBadge is a server component that reads `auth()` once per
+            request — it short-circuits to null when there's no session,
+            so unauthenticated views (landing, sign-in) stay clean. */}
+        <UserBadge />
         {children}
       </body>
     </html>
