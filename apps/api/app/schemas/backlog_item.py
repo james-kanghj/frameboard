@@ -7,6 +7,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.schemas.score import ScoreRead
+
 # Tag normalisation rules — applied uniformly on create and update so
 # the DB never holds two equivalent tags ("Infra" vs "infra"), oversized
 # strings, or empty entries.
@@ -77,4 +79,12 @@ class BacklogItemRead(BaseModel):
     tags: list[str]
     created_at: datetime
     updated_at: datetime
+    # RICE-specific score from the legacy `rice_scores` table. Populated
+    # for RICE workspaces; None for non-RICE workspaces (which use the
+    # polymorphic `score` field below). Kept as a separate field for
+    # backward compatibility with existing frontend code.
     rice_score: RICEScoreRead | None = None
+    # Polymorphic score for non-RICE frameworks (ICE / MoSCoW /
+    # ValueEffort). Populated only by the board endpoint, where the
+    # workspace's framework is known. Defaults to None on other endpoints.
+    score: ScoreRead | None = None
