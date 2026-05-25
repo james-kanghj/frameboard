@@ -1,5 +1,3 @@
-/apps/api/app/models/backlog_item.py
-
 from datetime import datetime
 from uuid import UUID, uuid4
 

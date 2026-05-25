@@ -1,5 +1,3 @@
-/apps/api/app/models/workspace.py
-
 from datetime import datetime
 from uuid import UUID, uuid4
 

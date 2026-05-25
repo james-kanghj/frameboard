@@ -88,3 +88,43 @@ cd apps/api && pytest
 # Frontend (when added)
 cd apps/web && pnpm test
 ```
+
+## 7. Database migrations (Alembic)
+
+Migrations live in `apps/api/alembic/versions/`. Alembic reads `DATABASE_URL`
+from `app.core.config.settings` (which loads `apps/api/.env.local` etc.), so
+there is no separate URL to configure in `alembic.ini`.
+
+### Apply migrations
+
+Make sure Postgres is up (see step 3 — `docker compose up -d db`), then from
+`apps/api/` with the venv active:
+
+```bash
+cd apps/api
+alembic upgrade head
+```
+
+To check current revision / history:
+
+```bash
+alembic current
+alembic history --verbose
+```
+
+### Create a new migration
+
+After editing a model under `app/models/`, autogenerate the diff:
+
+```bash
+alembic revision --autogenerate -m "add foo column" --rev-id 0002_add_foo
+```
+
+Notes:
+
+- Pass `--rev-id` to keep filenames sequential (`0002_…`, `0003_…`). Without
+  it, Alembic uses a random hex slug.
+- **Always review the generated file** before committing — autogenerate
+  misses things like server-side defaults, custom types, and renames. Hand-
+  edit as needed.
+- To roll back one step locally: `alembic downgrade -1`.

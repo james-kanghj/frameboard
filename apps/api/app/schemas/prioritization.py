@@ -1,5 +1,3 @@
-/apps/api/app/schemas/prioritization.py
-
 from typing import Literal
 
 from pydantic import BaseModel, Field

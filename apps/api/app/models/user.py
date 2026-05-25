@@ -1,5 +1,3 @@
-/apps/api/app/models/user.py
-
 from datetime import datetime
 from uuid import UUID, uuid4
 

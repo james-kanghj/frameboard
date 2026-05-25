@@ -1,5 +1,3 @@
-/apps/api/app/api/prioritization.py
-
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.prioritization import (

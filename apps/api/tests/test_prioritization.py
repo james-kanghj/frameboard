@@ -1,5 +1,3 @@
-/apps/api/tests/test_prioritization.py
-
 import pytest
 from fastapi.testclient import TestClient
 
