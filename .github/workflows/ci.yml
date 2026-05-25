@@ -15,9 +15,10 @@ jobs:
         working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
+      # No `version:` — action-setup@v4 reads it from package.json's
+      # `packageManager` field (currently pinned to 11.3.0). Setting it
+      # here was conflicting with the pin and failing the job.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -51,9 +52,9 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: frameboard
-          POSTGRES_PASSWORD: frameboard
-          POSTGRES_DB: frameboard
+          POSTGRES_USER: "frameboard"
+          POSTGRES_PASSWORD: "frameboard"
+          POSTGRES_DB: "frameboard"
         ports:
           - 5433:5432
         options: >-
@@ -66,9 +67,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 11.3.0
+      # Match web job: no explicit version, use packageManager pin.
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -83,7 +83,7 @@ jobs:
       - name: Run migrations
         working-directory: apps/api
         env:
-          DATABASE_URL: postgresql+psycopg://frameboard:frameboard@localhost:5433/frameboard
+          DATABASE_URL: "postgresql+psycopg://frameboard:frameboard@localhost:5433/frameboard"
         run: |
           source .venv/bin/activate
           alembic upgrade head
@@ -91,7 +91,7 @@ jobs:
       - name: Start API
         working-directory: apps/api
         env:
-          DATABASE_URL: postgresql+psycopg://frameboard:frameboard@localhost:5433/frameboard
+          DATABASE_URL: "postgresql+psycopg://frameboard:frameboard@localhost:5433/frameboard"
           FRAMEBOARD_TEST_MODE: "1"
           API_CORS_ORIGINS: "http://localhost:3000"
         run: |
@@ -108,17 +108,17 @@ jobs:
 
       - name: Build frontend
         env:
-          NEXT_PUBLIC_API_BASE_URL: http://localhost:8001
-          NEXT_PUBLIC_DEV_USER_EMAIL: [email protected]
+          NEXT_PUBLIC_API_BASE_URL: "http://localhost:8001"
+          NEXT_PUBLIC_DEV_USER_EMAIL: "61649060+james-kanghj@users.noreply.github.com"
         run: pnpm --filter @frameboard/web build
 
       - name: Run E2E tests
         env:
           CI: "1"
-          NEXT_PUBLIC_API_BASE_URL: http://localhost:8001
-          NEXT_PUBLIC_DEV_USER_EMAIL: [email protected]
-          PLAYWRIGHT_API_URL: http://localhost:8001
-          E2E_USER_EMAIL: [email protected]
+          NEXT_PUBLIC_API_BASE_URL: "http://localhost:8001"
+          NEXT_PUBLIC_DEV_USER_EMAIL: "61649060+james-kanghj@users.noreply.github.com"
+          PLAYWRIGHT_API_URL: "http://localhost:8001"
+          E2E_USER_EMAIL: "61649060+james-kanghj@users.noreply.github.com"
         run: pnpm --filter @frameboard/web e2e
 
       - name: Upload Playwright report on failure
