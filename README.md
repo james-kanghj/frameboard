@@ -67,15 +67,15 @@ Alpha, built in the open. **Live and deployed** at [frameboard.pages.dev](https:
 | Layer | Status |
 |---|---|
 | Database schema | ✅ Users, workspaces, items, RICE scores |
-| Backend API | ✅ Full CRUD + RICE/ICE/MoSCoW/ValueEffort scoring + item tags + history log (85 pytest tests) |
+| Backend API | ✅ Full CRUD + RICE/ICE/MoSCoW/ValueEffort scoring + item tags + history log (96 pytest tests) |
 | Frontend workspace list + board | ✅ Create, score, edit (modal + inline), delete, tag |
 | Visualization & filtering | ✅ Top-10 bars + Effort × Score scatter, search / status / effort / score / tag chips, URL-synced state |
 | Metric tooltips | ✅ Inline (i) on Reach / Impact / Confidence / Effort / Score |
 | End-to-end test suite | ✅ 5 Playwright scenarios, green in CI |
 | Production deployment | ✅ Cloudflare Pages + Render + Neon |
 | Self-host Docker image | ✅ `docker compose -f docker-compose.selfhost.yml up --build` brings up the full stack |
-| Multi-framework scoring | 🚧 Backend shipped (`POST /v1/score`, `workspace.framework`, polymorphic `item_scores`); frontend selector + per-framework UI in progress |
-| Auth | ⏳ Single-user hardcoded for MVP |
+| Multi-framework scoring | 🚧 Backend shipped (`POST /v1/score`, `workspace.framework`, polymorphic `item_scores`); frontend selector ✅ ready, per-framework input forms in progress |
+| Auth | ✅ GitHub OAuth via NextAuth.js + HS256 JWT verification on the backend. `AUTH_DISABLED=1` bypass for self-host / local dev |
 
 ## Quick start
 
@@ -132,6 +132,28 @@ docker compose -f docker-compose.selfhost.yml up -d --build
 
 Brings up Postgres (`:5433`), the FastAPI backend (`:8001`), and the Next.js frontend (`:3000`). The backend auto-runs Alembic migrations on boot, so a fresh DB initializes itself. Override the build args in `docker-compose.selfhost.yml` if you're hosting under a custom domain — `NEXT_PUBLIC_API_BASE_URL` is inlined at build time and needs a rebuild to change.
 
+### Production auth setup
+
+Local dev and self-host can skip auth (`AUTH_DISABLED=1` on the API,
+`NEXT_PUBLIC_AUTH_DISABLED=1` on the web). For a public deployment with
+sign-in, register a GitHub OAuth app and wire it through:
+
+1. **Register the OAuth app** at <https://github.com/settings/developers>
+   with the authorization callback URL set to
+   `https://<your-domain>/api/auth/callback/github`.
+2. **Generate a 32-byte secret**: `openssl rand -base64 32`. Both the
+   Next.js app and the FastAPI backend must use the same value
+   (HS256 JWT signing key).
+3. **Web env (Cloudflare Pages)**: set `NEXTAUTH_SECRET`,
+   `NEXTAUTH_URL=https://<your-domain>`, `GITHUB_ID`, `GITHUB_SECRET`.
+   Leave `NEXT_PUBLIC_AUTH_DISABLED` unset.
+4. **API env (Render)**: set the same `NEXTAUTH_SECRET`. Leave
+   `AUTH_DISABLED` unset (defaults to `0`).
+
+Backend ownership checks (`require_workspace_owner`,
+`_load_owned_item`) then gate every workspace / item / score endpoint
+on the JWT's `email` claim.
+
 ## Tech stack
 
 | Layer    | Tech                                                       |
@@ -140,7 +162,7 @@ Brings up Postgres (`:5433`), the FastAPI backend (`:8001`), and the Next.js fro
 | Backend  | FastAPI, Python 3.12+, SQLAlchemy 2.0, Alembic             |
 | Database | PostgreSQL 16 (Dockerized, port `5433` to avoid conflicts) |
 | Monorepo | pnpm workspaces + Turborepo                                |
-| Testing  | pytest (85 tests, backend), Playwright (5 e2e scenarios)   |
+| Testing  | pytest (96 tests, backend), Playwright (5 e2e scenarios)   |
 | Deploy   | Cloudflare Pages (frontend) + Render (backend) + Neon (DB) |
 | CI       | GitHub Actions — web, api, e2e jobs all gated on PRs       |
 
@@ -165,10 +187,10 @@ Brings up Postgres (`:5433`), the FastAPI backend (`:8001`), and the Next.js fro
 - [x] Self-host Docker image — `docker compose -f docker-compose.selfhost.yml up --build` brings up Postgres + API + Web
 - [x] Item tags / categories — JSON column on items, pill input in the edit modal, tag chip filter on the board (URL `?tag=`)
 - [x] Score history / change-log timeline per item — append-only `item_history` table records RICE changes and field edits; collapsible timeline in the edit modal
-- [~] ICE / MoSCoW / Value-vs-Effort frameworks — backend done: `workspace.framework` switch, polymorphic `item_scores` table, unified `POST /v1/score`, framework-aware board ordering. Frontend selector + per-framework input forms next.
+- [~] ICE / MoSCoW / Value-vs-Effort frameworks — backend done: `workspace.framework` switch, polymorphic `item_scores` table, unified `POST /v1/score`, framework-aware board ordering. Frontend has the create-workspace framework selector; per-framework input forms in the edit modal still to come.
+- [x] Multi-user auth (NextAuth.js + JWT) — GitHub OAuth on the frontend, HS256 JWT verification on the backend with cross-user ownership checks on every endpoint. `AUTH_DISABLED=1` bypass for self-host / local dev (mirrored on both sides).
 - [ ] Collaborative scoring with disagreement visualization
 - [ ] Jira / Linear / Notion export
-- [ ] Multi-user auth (NextAuth.js + JWT)
 
 See [GitHub Projects](https://github.com/james-kanghj/frameboard/projects) for the live board.
 
