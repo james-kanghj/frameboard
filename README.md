@@ -16,6 +16,31 @@
 
 ---
 
+## Screenshots
+
+The board at a glance — filter bar, top-10 bar chart, and the table:
+
+![Board hero — Q2 2026 Roadmap with filters and bar chart](./docs/screenshots/01-board-hero.png)
+
+<table>
+  <tr>
+    <td width="50%"><strong>Effort × Score scatter</strong><br><sub>PM's classic 2×2 quadrant: Quick wins / Big bets / Fill-ins / Avoid</sub></td>
+    <td width="50%"><strong>Multiple workspaces</strong><br><sub>Each workspace holds a backlog and its RICE scoring</sub></td>
+  </tr>
+  <tr>
+    <td><a href="./docs/screenshots/02-scatter-view.png"><img src="./docs/screenshots/02-scatter-view.png" alt="Effort × Score scatter plot"></a></td>
+    <td><a href="./docs/screenshots/03-workspaces-list.png"><img src="./docs/screenshots/03-workspaces-list.png" alt="Workspaces list"></a></td>
+  </tr>
+  <tr>
+    <td colspan="2"><strong>Live filtering — search + status with URL state</strong><br><sub>e.g. <code>?q=integration&status=scored&view=scatter</code> survives refresh and is shareable</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2"><a href="./docs/screenshots/04-filter-search.png"><img src="./docs/screenshots/04-filter-search.png" alt="Live filter narrowing 25 items to one match"></a></td>
+  </tr>
+</table>
+
+> Captured against the live deployment — regenerate any time with `pnpm --filter @frameboard/web exec node scripts/capture-screenshots.mjs`.
+
 ## Why Frameboard?
 
 Product managers waste hours each sprint debating "what to build next" in spreadsheets, sticky notes, and Slack threads. Existing tools either lock you into one framework (Jira, Linear) or charge per seat for what should be a 10-minute decision.
