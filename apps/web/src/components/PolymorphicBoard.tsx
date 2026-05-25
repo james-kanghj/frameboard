@@ -392,9 +392,17 @@ function EmptyState({
   return (
     <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50/50 p-12 text-center">
       <h2 className="text-lg font-semibold text-slate-900">No items yet</h2>
-      <p className="mx-auto mt-2 max-w-sm text-sm text-slate-600">
+      {/* max-w-xl + whitespace-nowrap on the formula span: the mono text
+          for MoSCoW ("Must / Should / Could / Won't") is wide enough
+          that max-w-sm forced an awkward break in the middle of the
+          slash-separated list. Keep the formula as one atomic chunk
+          and give the paragraph room to fit it. */}
+      <p className="mx-auto mt-2 max-w-xl text-sm text-slate-600">
         Add items to score with{" "}
-        <span className="font-mono text-slate-700">{formula}</span>.
+        <span className="whitespace-nowrap font-mono text-slate-700">
+          {formula}
+        </span>
+        .
       </p>
       <button
         type="button"
