@@ -10,7 +10,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](#status)
 [![CI](https://github.com/james-kanghj/frameboard/actions/workflows/ci.yml/badge.svg)](https://github.com/james-kanghj/frameboard/actions/workflows/ci.yml)
-[![GitHub stars](https://img.shields.io/github/stars/james-kanghj/frameboard?style=flat&logo=github)](https://github.com/james-kanghj/frameboard/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/james-kanghj/frameboard?logo=github&label=stars&color=yellow)](https://github.com/james-kanghj/frameboard/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/james-kanghj/frameboard)](https://github.com/james-kanghj/frameboard/commits/main)
 [![Open issues](https://img.shields.io/github/issues/james-kanghj/frameboard?logo=github)](https://github.com/james-kanghj/frameboard/issues)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
