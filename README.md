@@ -25,36 +25,54 @@
 
 ## Screenshots
 
-The board at a glance — filter bar, top-10 bar chart, and the table:
+The Q2 roadmap board at a glance — Members + Export + Add controls, framework-aware metric legend, Top-10 bar chart, the table, and the filter chips:
 
-![Board hero — Q2 2026 Roadmap with filters and bar chart](./docs/screenshots/01-board-hero.png)
+![Board hero — Q2 2026 Roadmap with members, export, filters, and bar chart](./docs/screenshots/01-board-hero.png)
 
 <table>
   <tr>
+    <td width="50%"><strong>Pick a framework per workspace</strong><br><sub>Custom dropdown on the create modal — every workspace can use a different prioritization framework</sub></td>
+    <td width="50%"><strong>ICE board</strong><br><sub>Polymorphic board with framework-specific columns (Impact / Confidence / Ease, 1–10 scale) and the I × C × E formula in the legend</sub></td>
+  </tr>
+  <tr>
+    <td><a href="./docs/screenshots/13-framework-picker.png"><img src="./docs/screenshots/13-framework-picker.png" alt="Framework dropdown on the create workspace modal — RICE, ICE, Value × Effort, MoSCoW"></a></td>
+    <td><a href="./docs/screenshots/07-ice-board.png"><img src="./docs/screenshots/07-ice-board.png" alt="ICE board with Impact / Confidence / Ease columns"></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><strong>MoSCoW board</strong><br><sub>Categorical Must / Should / Could / Won't bucket assignments with their own framework intro line</sub></td>
+    <td width="50%"><strong>Value × Effort board</strong><br><sub>Two-input score = V ÷ E. Same polymorphic board variant; only the columns + formula change</sub></td>
+  </tr>
+  <tr>
+    <td><a href="./docs/screenshots/08-moscow-board.png"><img src="./docs/screenshots/08-moscow-board.png" alt="MoSCoW board with Must / Should / Could / Won't buckets"></a></td>
+    <td><a href="./docs/screenshots/09-value-effort-board.png"><img src="./docs/screenshots/09-value-effort-board.png" alt="Value × Effort board"></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><strong>Invite teammates by email</strong><br><sub>Members modal — owner adds scorers; each member writes their own score row and the board ranks by the team aggregate</sub></td>
+    <td width="50%"><strong>Export menu (CSV / Notion / Linear)</strong><br><sub>Three targets behind a single dropdown. CSV downloads client-side; Notion and Linear hit per-user tokens stored against the user</sub></td>
+  </tr>
+  <tr>
+    <td><a href="./docs/screenshots/12-members-modal.png"><img src="./docs/screenshots/12-members-modal.png" alt="Members modal with owner pill and invite form"></a></td>
+    <td><a href="./docs/screenshots/11-export-menu.png"><img src="./docs/screenshots/11-export-menu.png" alt="Export dropdown showing CSV, Notion, and Linear options"></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><strong>Completion checkbox + retro view</strong><br><sub>Shipped items strike through and sink to the bottom; <code>?completed=show</code> mixes them back in for the retrospective</sub></td>
     <td width="50%"><strong>Effort × Score scatter (RICE)</strong><br><sub>PM's classic 2×2 quadrant: Quick wins / Big bets / Fill-ins / Avoid</sub></td>
-    <td width="50%"><strong>Multiple workspaces, multiple frameworks</strong><br><sub>Each workspace picks its own scoring framework — RICE, ICE, Value × Effort, or MoSCoW</sub></td>
   </tr>
   <tr>
+    <td><a href="./docs/screenshots/10-completed-visible.png"><img src="./docs/screenshots/10-completed-visible.png" alt="Board with completed items visible, struck-through and dimmed"></a></td>
     <td><a href="./docs/screenshots/02-scatter-view.png"><img src="./docs/screenshots/02-scatter-view.png" alt="Effort × Score scatter plot"></a></td>
-    <td><a href="./docs/screenshots/03-workspaces-list.png"><img src="./docs/screenshots/03-workspaces-list.png" alt="Workspaces list"></a></td>
   </tr>
   <tr>
-    <td width="50%"><strong>Effort + Tag chip filters</strong><br><sub>Quick (≤3) effort + <code>feature</code> tag narrows 25 items to a focused slice — Score bucket sits alongside, ready to layer on</sub></td>
-    <td width="50%"><strong>Inline (i) tooltips on every metric</strong><br><sub>Hover, focus, or tap for the RICE-specific scale (0.25 → 3 etc.)</sub></td>
+    <td width="50%"><strong>Filter chips — Effort / Score / Tag / Completed</strong><br><sub>Each chip group writes its state into the URL so a focused view is shareable</sub></td>
+    <td width="50%"><strong>Inline (i) tooltips on every metric</strong><br><sub>Hover, focus, or tap for the framework-specific scale (0.25 → 3 for RICE Impact, 1–10 for ICE, bucket labels for MoSCoW)</sub></td>
   </tr>
   <tr>
-    <td><a href="./docs/screenshots/05-filter-buckets.png"><img src="./docs/screenshots/05-filter-buckets.png" alt="Bucket filter chips active"></a></td>
+    <td><a href="./docs/screenshots/05-filter-buckets.png"><img src="./docs/screenshots/05-filter-buckets.png" alt="Effort + Tag bucket filter chips active"></a></td>
     <td><a href="./docs/screenshots/06-tooltip-impact.png"><img src="./docs/screenshots/06-tooltip-impact.png" alt="Impact tooltip showing the 5-point RICE scale"></a></td>
-  </tr>
-  <tr>
-    <td colspan="2"><strong>Live text search — title + description with URL state</strong><br><sub>e.g. <code>?q=integration&status=scored&view=scatter</code> survives refresh and is shareable</sub></td>
-  </tr>
-  <tr>
-    <td colspan="2"><a href="./docs/screenshots/04-filter-search.png"><img src="./docs/screenshots/04-filter-search.png" alt="Live filter narrowing 25 items to one match"></a></td>
   </tr>
 </table>
 
-> Regenerate any time with `pnpm --filter @frameboard/web exec node scripts/capture-screenshots.mjs`. Defaults target the live deployment; pass `BASE=http://localhost:3000 WS_Q2=<id>` to capture from a local dev server before pushing changes that aren't deployed yet.
+> Regenerate any time with `BEARER=<jwt> pnpm --filter @frameboard/web exec node scripts/capture-screenshots.mjs`. The BEARER comes from `https://<your-deploy>/api/token` after signing in. Pass `BASE=http://localhost:3000` (and the matching `WS_*` IDs) to capture against a local dev server instead of the live deployment.
 
 ## Why Frameboard?
 
