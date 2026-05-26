@@ -63,23 +63,27 @@ Product managers waste hours each sprint debating "what to build next" in spread
 **Frameboard is different:**
 
 - 🧮 **Multi-framework** — Pick RICE, ICE, Value × Effort, or MoSCoW per workspace. Each board renders inputs, metric legend, and scoring formula tailored to the framework you picked
+- 👥 **Real collaborative scoring** — Invite teammates by email, every member saves their own scoring inputs, and the board ranks by the team aggregate (mean) with a min–max spread + contributor chip so disagreement is visible at a glance
+- ☑️ **Ship-it tracking** — Per-row completion checkbox; shipped items sink to the bottom of the active board automatically and only resurface when you toggle "Show completed" for the retro
+- 📤 **Export-first** — One-click CSV download (framework-aware columns) or push the workspace to Notion / Linear with token-based per-user integrations; partial failures reported per row
 - 🔐 **Sign in with GitHub** — NextAuth on the frontend, JWT-verified ownership checks on the backend. `AUTH_DISABLED=1` bypass for self-hosters who don't want OAuth
-- 📊 **PM-shaped visuals** — Top-N bar chart and Effort × Score scatter (Quick wins / Big bets / Fill-ins / Avoid) on RICE boards; URL-synced filters (`?q=…&status=…&effort=…&score=…&tag=…`) for sharing a working view
+- 📊 **PM-shaped visuals** — Top-N bar chart and Effort × Score scatter (Quick wins / Big bets / Fill-ins / Avoid) on RICE boards; URL-synced filters (`?q=…&status=…&effort=…&score=…&tag=…&completed=show`) for sharing a working view
 - 🚀 **Self-hostable** — One Docker command. Your data stays yours
 
 ## Status
 
-Alpha, built in the open. **Live and deployed** at [frameboard.pages.dev](https://frameboard.pages.dev) (Cloudflare Pages frontend + Render backend + Neon Postgres). End-to-end happy path is functional: create a workspace, add items, score them with RICE, edit inline or via modal, delete.
+Alpha, built in the open. **Live and deployed** at [frameboard.pages.dev](https://frameboard.pages.dev) (Cloudflare Pages frontend + Render backend + Neon Postgres). End-to-end happy path is functional across all four frameworks, with multi-user collaboration, completion tracking, and CSV / Notion / Linear export shipped.
 
 | Layer | Status |
 |---|---|
-| Database schema | ✅ Users, workspaces, items (with completion), RICE scores, polymorphic `item_scores`, history log |
-| Backend API | ✅ Full CRUD + per-user RICE/ICE/MoSCoW/ValueEffort scoring + item tags + completion + history log + Notion/Linear export + workspace membership + aggregate score endpoint (129 pytest tests) |
-| Frontend workspace list + board | ✅ Create (with framework picker), score, edit (modal + inline for RICE), delete, tag, complete |
-| Multi-framework scoring | ✅ Backend (`POST /v1/score`, `workspace.framework`, polymorphic `item_scores`) and frontend both shipped. Custom framework dropdown on the create modal; ICE / MoSCoW / Value × Effort each render a dedicated polymorphic board with framework-aware inputs, metric legend, (i) tooltips, and intro line |
+| Database schema | ✅ Users, workspaces, items (with completion), per-user RICE / polymorphic `item_scores`, item history, workspace members |
+| Backend API | ✅ Full CRUD + per-user RICE/ICE/MoSCoW/ValueEffort scoring + aggregate endpoint + item tags + completion + history log + Notion/Linear export + workspace membership (129 pytest tests) |
 | Auth | ✅ GitHub OAuth via NextAuth.js + HS256 JWT verification on the backend. Floating user badge (avatar + email + Sign out) on every page. `AUTH_DISABLED=1` bypass for self-host / local dev |
-| Item completion | ✅ Per-row checkbox on every board. Checked items render strikethrough + dimmed and sink to the bottom regardless of score. Hidden by default; "Show completed" filter toggle mixes them back in for retrospectives. Mark/unmark events captured in the item history log |
-| Visualization & filtering | ✅ Top-10 bars + Effort × Score scatter (RICE), search / status / effort / score / tag chips, URL-synced state |
+| Multi-framework scoring | ✅ Custom framework dropdown on the create modal. ICE / MoSCoW / Value × Effort each render a dedicated polymorphic board with framework-aware inputs, metric legend, (i) tooltips, and intro line. Backend (`POST /v1/score`, `workspace.framework`, polymorphic `item_scores`) and frontend both shipped |
+| Collaborative scoring | ✅ Invite-by-email Members modal, per-user score rows on every framework, board sort + Score column show the team aggregate (mean + contributor chip + min–max spread). Each member's edits write only their own row |
+| Item completion | ✅ Per-row checkbox on every board. Checked items render strikethrough + dimmed and sink to the bottom regardless of score. Hidden by default; "Show completed" toggle mixes them back in for retrospectives. Mark/unmark events captured in the item history log |
+| Export | ✅ CSV (client-side, framework-aware columns), Notion (REST + token/database id), and Linear (GraphQL + personal API key/team id). Per-target setup flow + partial-success reporting in the in-app Export menu. Jira integration TODO |
+| Visualization & filtering | ✅ Top-10 bars + Effort × Score scatter (RICE), search / status / effort / score / tag / completed chips, URL-synced state |
 | Metric tooltips | ✅ Inline (i) on every framework's metric legend (RICE / ICE / MoSCoW / Value × Effort) |
 | Self-host Docker image | ✅ `docker compose -f docker-compose.selfhost.yml up --build` brings up the full stack |
 | End-to-end test suite | ✅ 5 Playwright scenarios, green in CI |
