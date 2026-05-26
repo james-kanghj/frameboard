@@ -2,7 +2,7 @@
 
 # Frameboard
 
-**An open-source workspace for product teams to run RICE, ICE, MoSCoW, and Kano prioritization - without leaving the browser.**
+**An open-source workspace for product teams to run RICE, ICE, MoSCoW, and Value × Effort prioritization - without leaving the browser.**
 
 ### 🚀 [Live demo → frameboard.pages.dev](https://frameboard.pages.dev)
 

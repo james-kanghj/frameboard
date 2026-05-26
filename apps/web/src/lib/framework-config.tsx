@@ -322,19 +322,4 @@ export const FRAMEWORK_CONFIGS: Record<Framework, FrameworkConfig> = {
     showCharts: false,
     showEffortScoreFilters: false,
   },
-
-  // Kano placeholder - backend doesn't implement it yet, but the
-  // Framework union allows it. Fall back to a stub so the type
-  // exhaustiveness check stays satisfied.
-  Kano: {
-    framework: "Kano",
-    displayName: "Kano",
-    formula: "(not implemented)",
-    intro: "Kano framework support is not implemented yet.",
-    inputs: [],
-    scoreFn: () => null,
-    metrics: [],
-    showCharts: false,
-    showEffortScoreFilters: false,
-  },
 };

@@ -7,7 +7,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Frameboard - Prioritization workspace for product teams",
   description:
-    "Run RICE, ICE, MoSCoW, and Kano prioritization with your team. Open source, self-hostable, export-first.",
+    "Run RICE, ICE, MoSCoW, and Value × Effort prioritization with your team. Open source, self-hostable, export-first.",
 };
 
 export default function RootLayout({

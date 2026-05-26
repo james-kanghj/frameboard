@@ -7,7 +7,7 @@ Thanks for your interest in contributing! Frameboard is built to help product te
 - 🐛 **Report bugs** - Use [GitHub Issues](https://github.com/james-kanghj/frameboard/issues)
 - 💡 **Propose features** - Open a discussion before large changes
 - 📝 **Improve docs** - Typos, clarifications, examples are all welcome
-- 🧪 **Add prioritization frameworks** - RICE, ICE, MoSCoW, Kano are in; what's missing?
+- 🧪 **Add prioritization frameworks** - RICE, ICE, MoSCoW, Value × Effort are in; what's missing? Kano, WSJF, opportunity scoring?
 - 🌐 **Translate** - Frameboard targets a global audience
 
 ## Development setup

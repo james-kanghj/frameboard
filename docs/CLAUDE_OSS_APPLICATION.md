@@ -20,7 +20,7 @@
 
 ```
 Maintainer and sole contributor of Frameboard, an open-source prioritization
-workspace for product teams (RICE, ICE, MoSCoW, Kano frameworks). Built the
+workspace for product teams (RICE, ICE, MoSCoW, Value × Effort frameworks). Built the
 initial Next.js + FastAPI monorepo, scoring API with full test coverage, CI
 pipeline, and contributor onboarding docs. Actively shipping weekly to MVP.
 Background: 11-year QA engineer / SDET pivoting to product management, with
@@ -39,7 +39,7 @@ two published Korean-language books on QA practice.
 
 ```
 I'm building Frameboard, an open-source workspace for product teams to run
-RICE, ICE, MoSCoW, and Kano prioritization without leaving the browser. The
+RICE, ICE, MoSCoW, and Value × Effort prioritization without leaving the browser. The
 project is early - pre-1.0, small star count - but it solves a real, daily
 pain I've watched product managers face for 11 years as a QA engineer: deciding
 what to build next, with the team, without paying per seat for what should be
@@ -58,7 +58,7 @@ blog posts in both English and Korean.
 
 ```
 Frameboard is an open-source prioritization workspace I'm building for product
-teams - RICE, ICE, MoSCoW, Kano in one collaborative board, exportable to
+teams - RICE, ICE, MoSCoW, Value × Effort in one collaborative board, exportable to
 Jira/Linear/Notion. I'm an 11-year QA engineer pivoting to product management,
 and this is the tool I wish my PMs had used. The project is early, but
 maintained weekly. Claude Max would accelerate the TypeScript-and-Python work

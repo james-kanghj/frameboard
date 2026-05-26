@@ -1,6 +1,6 @@
 // /packages/shared/src/index.ts
 
-export type Framework = "RICE" | "ICE" | "MoSCoW" | "ValueEffort" | "Kano";
+export type Framework = "RICE" | "ICE" | "MoSCoW" | "ValueEffort";
 
 export type RICEImpact = 0.25 | 0.5 | 1 | 2 | 3;
 

@@ -7,7 +7,7 @@
 1. https://github.com/new 접속
 2. 다음 값으로 생성:
    - **Repository name**: `frameboard`
-   - **Description**: `An open-source workspace for product teams to run RICE, ICE, MoSCoW, and Kano prioritization.`
+   - **Description**: `An open-source workspace for product teams to run RICE, ICE, MoSCoW, and Value × Effort prioritization.`
    - **Visibility**: **Public** ✅ (Claude OSS 심사 필수 조건)
    - **Initialize this repository** - 전부 체크 해제 (이미 로컬에 파일 있음)
 3. Create repository
@@ -40,7 +40,7 @@ git push -u origin main
 GitHub 레포 페이지에서:
 
 ### About 섹션 (우측 상단 ⚙️)
-- **Description**: `An open-source workspace for product teams to run RICE, ICE, MoSCoW, and Kano prioritization.`
+- **Description**: `An open-source workspace for product teams to run RICE, ICE, MoSCoW, and Value × Effort prioritization.`
 - **Website**: (배포 후 추가)
 - **Topics**:
   - `product-management`
@@ -48,7 +48,7 @@ GitHub 레포 페이지에서:
   - `rice-framework`
   - `ice-framework`
   - `moscow`
-  - `kano`
+  - `value-effort`
   - `nextjs`
   - `fastapi`
   - `typescript`
