@@ -198,8 +198,8 @@ on the JWT's `email` claim.
 - [x] ICE / MoSCoW / Value-vs-Effort frameworks — backend: `workspace.framework`, polymorphic `item_scores` table, unified `POST /v1/score`, framework-aware board ordering. Frontend: custom framework picker on the create-workspace modal, dedicated polymorphic board for non-RICE workspaces with per-framework inputs (1–10 sliders for ICE, V/E numeric pair for Value × Effort, Must/Should/Could/Won't select for MoSCoW), framework-aware metric legend, (i) tooltips, and an intro line per board.
 - [x] Multi-user auth (NextAuth.js + JWT) — GitHub OAuth on the frontend, HS256 JWT verification on the backend with cross-user ownership checks on every endpoint. Floating user badge on every page (avatar + email + Sign out). `AUTH_DISABLED=1` bypass for self-host / local dev (mirrored on both sides).
 - [x] Item completion — nullable `completed_at` on `backlog_items` (migration 0006), checkbox column on every board, completed items strikethrough + sink to the bottom regardless of score. "Show completed" filter toggle (URL `?completed=show`) mixes them back in for retros. History log captures mark/unmark events automatically via the field-diff hook.
+- [~] CSV / Jira / Linear / Notion export — CSV export shipped: one-click download from any workspace board, headers adapt to the workspace's framework, UTF-8 BOM so Excel opens it cleanly. Jira / Linear / Notion integrations still TODO.
 - [ ] Collaborative scoring with disagreement visualization
-- [ ] Jira / Linear / Notion export
 
 See [GitHub Projects](https://github.com/james-kanghj/frameboard/projects) for the live board.
 

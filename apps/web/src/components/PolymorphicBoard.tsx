@@ -27,6 +27,7 @@ import {
   scoreItem,
   updateItem,
 } from "@/lib/api";
+import { downloadCSV, itemsToCSV } from "@/lib/csv-export";
 import {
   FRAMEWORK_CONFIGS,
   type FrameworkConfig,
@@ -191,13 +192,30 @@ export function PolymorphicBoard({
               : `${items.length} ${items.length === 1 ? "item" : "items"}`}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setAddOpen(true)}
-          className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-        >
-          Add item
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              downloadCSV(workspaceName, itemsToCSV(items, framework))
+            }
+            disabled={items.length === 0}
+            className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            title={
+              items.length === 0
+                ? "Add at least one item to export"
+                : "Download all items as a CSV file"
+            }
+          >
+            Export CSV
+          </button>
+          <button
+            type="button"
+            onClick={() => setAddOpen(true)}
+            className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+          >
+            Add item
+          </button>
+        </div>
       </header>
 
       <div className="mt-8">
