@@ -223,6 +223,19 @@ on the JWT's `email` claim.
 - [~] CSV / Jira / Linear / Notion export - CSV (client-side, framework-aware columns), Notion (REST, token + database id), and Linear (GraphQL, personal API key + team id) all shipped. Per-target setup flow lives in the in-app Export menu; partial-success reporting (created / failed counts + per-row error) is shared across integrations. Jira integration still TODO.
 - [x] Collaborative scoring - workspace_members table + invite-by-email (Phase A), per-user `rice_scores` / `item_scores` rows with `(item_id, user_id, framework)` unique key (Phase B), and board surfaces the team aggregate (mean + variance + min/max spread + contributor chip) sourced from those per-user rows (Phase C). Each member's inline edits write only their own row; deletes only clear their own. Sort key on every board now uses the aggregate, not the caller's personal score.
 
+### Beta (next)
+
+The alpha scope is feature-complete; beta is about getting Frameboard into actual product managers' hands without breaking on contact. The bar shifts from "does the feature work?" to "does a stranger survive their first 60 seconds?" Three production-grade guardrails go in *before* any external launch, then the rest of the milestone is whatever real users surface.
+
+- [ ] **Integration token encryption at rest** - Notion access tokens and Linear API keys currently land in plain VARCHAR (flagged as future work in migration 0007's docstring). Wrap them via libsodium secretbox (or KMS on managed Postgres) before any non-maintainer signs up. Column type already forward-compatible.
+- [ ] **Rate limiting + error observability** - `slowapi` on every write endpoint (per-user, per-IP buckets) so a single abusive client can't sink the Render free tier. Sentry SDK on both frontend and FastAPI for unhandled exceptions and slow-query traces.
+- [ ] **Demo workspace on signup** - first GitHub OAuth callback seeds a "Q2 roadmap (demo)" workspace with 8-10 pre-scored items so the new-user landing page isn't an empty board. Banner explains it's a sandbox and offers a one-click delete.
+- [ ] **Public read-only board URLs** - shareable `/share/<slug>` links that render the board without auth, no scoring controls. Lets a PM hand the link to a stakeholder without inviting them as a member.
+- [ ] **Onboarding session with 3-5 product managers** - actually watch them sign up, score items, invite a teammate, export to Notion. Triage what breaks on first contact (likely: copy ambiguity, mobile layout, empty states we haven't seen). Findings feed the rest of this list, not the other way around.
+- [ ] **v0.1.0 tag + ProductHunt / r/ProductManagement launch** - only after the above land. Goal is 25 self-hosted instances or 50 signups on the hosted demo, whichever comes first.
+
+Deferred unless real users ask: real-time collab (websockets), comments + @mentions, Jira export, Kano / WSJF frameworks, AI-assisted scoring suggestions. Easy to add post-beta; expensive to add speculatively.
+
 See [GitHub Projects](https://github.com/james-kanghj/frameboard/projects) for the live board.
 
 ## Contributing
