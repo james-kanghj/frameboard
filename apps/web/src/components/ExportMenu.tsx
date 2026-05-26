@@ -1,15 +1,31 @@
 "use client";
 
-// Unified export trigger: a small dropdown with CSV (client-side) and
-// Notion (server-side) options. Replaces the standalone "Export CSV"
-// button on both boards so the export surface stays in one place as
-// more integrations land (Linear / Jira next).
+// Unified export trigger: a small dropdown with CSV (client-side),
+// Notion (server-side), and Linear (server-side) options. Each
+// server-side target opens a config-or-export modal driven by the
+// per-user integration settings exposed at /v1/users/me.
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
-import type { BacklogItem, ExportResult, Framework } from "@frameboard/shared";
+import type {
+  BacklogItem,
+  ExportResult,
+  Framework,
+  UserMe,
+  UserMeUpdateInput,
+} from "@frameboard/shared";
 
-import { exportToNotion, getMe, updateMe } from "@/lib/api";
+import {
+  exportToLinear,
+  exportToNotion,
+  getMe,
+  updateMe,
+} from "@/lib/api";
 import { downloadCSV, itemsToCSV } from "@/lib/csv-export";
 
 interface Props {
@@ -19,7 +35,7 @@ interface Props {
   items: BacklogItem[];
 }
 
-type Modal = null | "notion";
+type Target = "notion" | "linear";
 
 export function ExportMenu({
   workspaceId,
@@ -28,7 +44,7 @@ export function ExportMenu({
   items,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [modal, setModal] = useState<Modal>(null);
+  const [modal, setModal] = useState<Target | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const empty = items.length === 0;
 
@@ -55,9 +71,9 @@ export function ExportMenu({
     downloadCSV(workspaceName, itemsToCSV(items, framework));
   }
 
-  function handleNotion() {
+  function openTarget(target: Target) {
     setOpen(false);
-    setModal("notion");
+    setModal(target);
   }
 
   return (
@@ -73,7 +89,7 @@ export function ExportMenu({
           title={
             empty
               ? "Add at least one item to export"
-              : "Download items as CSV or push to Notion"
+              : "Download items as CSV or push to Notion / Linear"
           }
         >
           Export
@@ -99,34 +115,28 @@ export function ExportMenu({
             role="menu"
             className="absolute right-0 z-20 mt-1 w-56 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
           >
-            <button
-              type="button"
-              role="menuitem"
+            <MenuItem
+              label="CSV"
+              hint="Download a spreadsheet"
               onClick={handleCsv}
-              className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-            >
-              <div className="font-medium">CSV</div>
-              <div className="text-xs text-slate-500">
-                Download a spreadsheet
-              </div>
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={handleNotion}
-              className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-            >
-              <div className="font-medium">Notion</div>
-              <div className="text-xs text-slate-500">
-                Push items as pages to a database
-              </div>
-            </button>
+            />
+            <MenuItem
+              label="Notion"
+              hint="Push items as pages to a database"
+              onClick={() => openTarget("notion")}
+            />
+            <MenuItem
+              label="Linear"
+              hint="Push items as issues to a team"
+              onClick={() => openTarget("linear")}
+            />
           </div>
         )}
       </div>
 
-      {modal === "notion" && (
-        <NotionExportModal
+      {modal && (
+        <IntegrationExportModal
+          target={modal}
           workspaceId={workspaceId}
           workspaceName={workspaceName}
           itemCount={items.length}
@@ -137,39 +147,167 @@ export function ExportMenu({
   );
 }
 
-// ─────────────────────────────────────────────── NotionExportModal ──
+function MenuItem({
+  label,
+  hint,
+  onClick,
+}: {
+  label: string;
+  hint: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      className="block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+    >
+      <div className="font-medium">{label}</div>
+      <div className="text-xs text-slate-500">{hint}</div>
+    </button>
+  );
+}
+
+// ───────────────────────────── IntegrationExportModal ──
+
+// Per-target metadata so a single modal component handles both Notion
+// and Linear. Adding a third (Jira) would mean adding a row here +
+// matching helpers in api.ts and the backend.
+interface TargetSpec {
+  name: string;
+  // Which UserMe field flips to true when credentials are saved.
+  isConfigured: (me: UserMe) => boolean;
+  // Helper rendered as a numbered list above the first-time setup form.
+  setupSteps: ReactNode;
+  // Label for the secret field and the placeholder rendered when one
+  // is already saved (the value itself is never echoed back).
+  tokenLabel: string;
+  tokenPlaceholder: string;
+  // Public id field — Notion has database id, Linear has team id.
+  publicIdLabel: string;
+  publicIdPlaceholder: string;
+  // Read the saved public id off UserMe, write the credentials back.
+  getSavedPublicId: (me: UserMe) => string | null;
+  buildUpdate: (token: string, publicId: string) => UserMeUpdateInput;
+  // Trigger the actual export against the workspace.
+  runExport: (workspaceId: string) => Promise<ExportResult>;
+  // What the success summary calls the created object.
+  unit: string; // e.g. "page", "issue"
+}
+
+const TARGETS: Record<Target, TargetSpec> = {
+  notion: {
+    name: "Notion",
+    isConfigured: (me) => me.notionConfigured,
+    setupSteps: (
+      <ol className="mt-2 list-decimal space-y-1 pl-4">
+        <li>
+          Create an integration at{" "}
+          <a
+            href="https://www.notion.so/my-integrations"
+            target="_blank"
+            rel="noreferrer"
+            className="underline hover:text-slate-900"
+          >
+            notion.so/my-integrations
+          </a>
+          .
+        </li>
+        <li>Copy the <em>internal integration secret</em> below.</li>
+        <li>
+          Open your Notion database, click &middot;&middot;&middot; &gt;{" "}
+          <em>Add connections</em> &gt; pick your integration.
+        </li>
+        <li>
+          Copy the database ID from the URL (the 32-char hex part) and
+          paste below.
+        </li>
+      </ol>
+    ),
+    tokenLabel: "Integration token",
+    tokenPlaceholder: "secret_…",
+    publicIdLabel: "Database ID",
+    publicIdPlaceholder: "e.g. 12ab34cd56ef…",
+    getSavedPublicId: (me) => me.notionDatabaseId,
+    buildUpdate: (token, publicId) => ({
+      notionAccessToken: token,
+      notionDatabaseId: publicId,
+    }),
+    runExport: exportToNotion,
+    unit: "page",
+  },
+  linear: {
+    name: "Linear",
+    isConfigured: (me) => me.linearConfigured,
+    setupSteps: (
+      <ol className="mt-2 list-decimal space-y-1 pl-4">
+        <li>
+          Open Linear &gt; settings &gt;{" "}
+          <a
+            href="https://linear.app/settings/account/security"
+            target="_blank"
+            rel="noreferrer"
+            className="underline hover:text-slate-900"
+          >
+            Security &amp; access &gt; Personal API keys
+          </a>{" "}
+          and create a new key.
+        </li>
+        <li>Paste the <em>lin_api_…</em> key below.</li>
+        <li>
+          Open the destination team in Linear; the team ID is the long
+          UUID under <em>Settings &gt; API</em> (or hover the team to
+          inspect the URL).
+        </li>
+      </ol>
+    ),
+    tokenLabel: "API key",
+    tokenPlaceholder: "lin_api_…",
+    publicIdLabel: "Team ID",
+    publicIdPlaceholder: "e.g. abc12345-…",
+    getSavedPublicId: (me) => me.linearTeamId,
+    buildUpdate: (token, publicId) => ({
+      linearApiKey: token,
+      linearTeamId: publicId,
+    }),
+    runExport: exportToLinear,
+    unit: "issue",
+  },
+};
 
 type ModalPhase = "loading" | "configure" | "ready" | "exporting" | "done";
 
-function NotionExportModal({
+function IntegrationExportModal({
+  target,
   workspaceId,
   workspaceName,
   itemCount,
   onClose,
 }: {
+  target: Target;
   workspaceId: string;
   workspaceName: string;
   itemCount: number;
   onClose: () => void;
 }) {
+  const spec = TARGETS[target];
   const [phase, setPhase] = useState<ModalPhase>("loading");
   const [token, setToken] = useState("");
-  const [databaseId, setDatabaseId] = useState("");
-  const [savedDatabaseId, setSavedDatabaseId] = useState<string | null>(null);
+  const [publicId, setPublicId] = useState("");
+  const [savedPublicId, setSavedPublicId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ExportResult | null>(null);
 
-  // Bootstrap: ask the API whether the user already has Notion
-  // credentials saved. If yes, jump straight to "ready"; otherwise
-  // surface the config form.
   useEffect(() => {
     let cancelled = false;
     getMe()
       .then((me) => {
         if (cancelled) return;
-        if (me.notionConfigured) {
-          setSavedDatabaseId(me.notionDatabaseId);
-          setDatabaseId(me.notionDatabaseId ?? "");
+        if (spec.isConfigured(me)) {
+          const saved = spec.getSavedPublicId(me);
+          setSavedPublicId(saved);
+          setPublicId(saved ?? "");
           setPhase("ready");
         } else {
           setPhase("configure");
@@ -183,7 +321,7 @@ function NotionExportModal({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [spec]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -197,24 +335,26 @@ function NotionExportModal({
     setError(null);
     setPhase("exporting");
     try {
-      // If the user is editing the credentials (changed inputs from
-      // what's saved), persist them first. Otherwise jump straight to
-      // the export.
       const tokenChanged = token.trim().length > 0;
-      const databaseChanged =
-        databaseId.trim().length > 0 && databaseId !== (savedDatabaseId ?? "");
-      if (tokenChanged || databaseChanged) {
-        await updateMe({
-          ...(tokenChanged ? { notionAccessToken: token.trim() } : {}),
-          ...(databaseChanged ? { notionDatabaseId: databaseId.trim() } : {}),
-        });
+      const publicIdChanged =
+        publicId.trim().length > 0 && publicId !== (savedPublicId ?? "");
+      if (tokenChanged || publicIdChanged) {
+        const update: UserMeUpdateInput = {};
+        const built = spec.buildUpdate(
+          tokenChanged ? token.trim() : "",
+          publicIdChanged ? publicId.trim() : "",
+        );
+        for (const [k, v] of Object.entries(built)) {
+          if (v !== "") update[k as keyof UserMeUpdateInput] = v as string;
+        }
+        await updateMe(update);
       }
-      const res = await exportToNotion(workspaceId);
+      const res = await spec.runExport(workspaceId);
       setResult(res);
       setPhase("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Export failed");
-      setPhase(savedDatabaseId ? "ready" : "configure");
+      setPhase(savedPublicId ? "ready" : "configure");
     }
   }
 
@@ -230,11 +370,11 @@ function NotionExportModal({
       }}
     >
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <h2 className="text-lg font-semibold">Export to Notion</h2>
+        <h2 className="text-lg font-semibold">Export to {spec.name}</h2>
         <p className="mt-1 text-sm text-slate-600">
           Push the {itemCount} {itemCount === 1 ? "item" : "items"} in{" "}
           <span className="font-medium text-slate-900">{workspaceName}</span>{" "}
-          as new pages in your Notion database.
+          as new {spec.unit}s to {spec.name}.
         </p>
 
         {phase === "loading" && (
@@ -245,43 +385,17 @@ function NotionExportModal({
           <div className="mt-6 space-y-4">
             {phase === "configure" && (
               <div className="rounded-md bg-slate-50 px-3 py-3 text-xs text-slate-600">
-                <p className="font-medium text-slate-900">
-                  First-time setup
-                </p>
-                <ol className="mt-2 list-decimal space-y-1 pl-4">
-                  <li>
-                    Create an integration at{" "}
-                    <a
-                      href="https://www.notion.so/my-integrations"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline hover:text-slate-900"
-                    >
-                      notion.so/my-integrations
-                    </a>
-                    .
-                  </li>
-                  <li>
-                    Copy the <em>internal integration secret</em> below.
-                  </li>
-                  <li>
-                    Open your Notion database, click &middot;&middot;&middot;
-                    &gt; <em>Add connections</em> &gt; pick your integration.
-                  </li>
-                  <li>
-                    Copy the database ID from the URL (the 32-char hex part)
-                    and paste below.
-                  </li>
-                </ol>
+                <p className="font-medium text-slate-900">First-time setup</p>
+                {spec.setupSteps}
               </div>
             )}
 
             <div>
               <label
-                htmlFor="notion-token"
+                htmlFor="export-token"
                 className="block text-sm font-medium text-slate-700"
               >
-                Integration token
+                {spec.tokenLabel}
                 {phase === "ready" && (
                   <span className="ml-2 text-xs font-normal text-slate-500">
                     (leave blank to keep saved)
@@ -289,7 +403,7 @@ function NotionExportModal({
                 )}
               </label>
               <input
-                id="notion-token"
+                id="export-token"
                 type="password"
                 autoFocus={phase === "configure"}
                 value={token}
@@ -297,7 +411,7 @@ function NotionExportModal({
                 placeholder={
                   phase === "ready"
                     ? "•••••••• (saved)"
-                    : "secret_..."
+                    : spec.tokenPlaceholder
                 }
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
               />
@@ -305,17 +419,17 @@ function NotionExportModal({
 
             <div>
               <label
-                htmlFor="notion-db"
+                htmlFor="export-public-id"
                 className="block text-sm font-medium text-slate-700"
               >
-                Database ID
+                {spec.publicIdLabel}
               </label>
               <input
-                id="notion-db"
+                id="export-public-id"
                 type="text"
-                value={databaseId}
-                onChange={(e) => setDatabaseId(e.target.value)}
-                placeholder="e.g. 12ab34cd56ef…"
+                value={publicId}
+                onChange={(e) => setPublicId(e.target.value)}
+                placeholder={spec.publicIdPlaceholder}
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
               />
             </div>
@@ -342,7 +456,8 @@ function NotionExportModal({
                 onClick={handleExport}
                 disabled={
                   phase === "configure" &&
-                  (token.trim().length === 0 || databaseId.trim().length === 0)
+                  (token.trim().length === 0 ||
+                    publicId.trim().length === 0)
                 }
                 className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-60"
               >
@@ -354,8 +469,8 @@ function NotionExportModal({
 
         {phase === "exporting" && (
           <p className="mt-6 text-sm text-slate-600">
-            Exporting {itemCount} {itemCount === 1 ? "item" : "items"} to
-            Notion… this can take a few seconds per page.
+            Exporting {itemCount} {itemCount === 1 ? "item" : "items"} to{" "}
+            {spec.name}… this can take a few seconds per {spec.unit}.
           </p>
         )}
 
@@ -363,7 +478,7 @@ function NotionExportModal({
           <div className="mt-6 space-y-3">
             <p className="text-sm">
               <span className="font-medium text-slate-900">
-                {result.created} {result.created === 1 ? "page" : "pages"}{" "}
+                {result.created} {result.created === 1 ? spec.unit : spec.unit + "s"}{" "}
                 created
               </span>
               {result.failed > 0 && (
@@ -380,8 +495,7 @@ function NotionExportModal({
                 <ul className="mt-2 space-y-1">
                   {result.failures.map((f, i) => (
                     <li key={i}>
-                      <span className="font-medium">{f.title}:</span>{" "}
-                      {f.error}
+                      <span className="font-medium">{f.title}:</span> {f.error}
                     </li>
                   ))}
                 </ul>

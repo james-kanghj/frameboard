@@ -304,3 +304,10 @@ export function exportToNotion(workspaceId: string): Promise<ExportResult> {
     { method: "POST" },
   );
 }
+
+export function exportToLinear(workspaceId: string): Promise<ExportResult> {
+  return request<ExportResult>(
+    `/v1/workspaces/${workspaceId}/export/linear`,
+    { method: "POST" },
+  );
+}

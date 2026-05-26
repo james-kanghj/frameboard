@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from app.api import exports
-from app.services import notion_export
+from app.services import linear_export, notion_export
 
 NIL_UUID = "00000000-0000-0000-0000-000000000000"
 
@@ -131,3 +131,94 @@ def test_export_unknown_workspace_404(client):
         f"/v1/workspaces/{NIL_UUID}/export/notion"
     )
     assert response.status_code == 404
+
+
+# ─── Linear ─────────────────────────────────────────────────────────
+
+
+def test_linear_export_requires_configured(client, workspace_with_items):
+    response = client.post(
+        f"/v1/workspaces/{workspace_with_items}/export/linear"
+    )
+    assert response.status_code == 400
+    assert "Linear integration" in response.json()["detail"]
+
+
+def test_linear_export_creates_issues(
+    client, workspace_with_items, monkeypatch
+):
+    client.patch(
+        "/v1/users/me",
+        json={
+            "linear_api_key": "lin_api_secret",
+            "linear_team_id": "team-abc",
+        },
+    )
+
+    calls: list[dict] = []
+
+    def fake_create_issue(**kwargs):
+        calls.append(kwargs)
+        return {"id": "issue-id", "identifier": "ENG-1", "url": "https://…"}
+
+    monkeypatch.setattr(exports, "create_issue", fake_create_issue)
+
+    response = client.post(
+        f"/v1/workspaces/{workspace_with_items}/export/linear"
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["created"] == 2
+    assert body["failed"] == 0
+    assert len(calls) == 2
+    assert {c["api_key"] for c in calls} == {"lin_api_secret"}
+    assert {c["team_id"] for c in calls} == {"team-abc"}
+
+
+def test_linear_export_partial_failure(
+    client, workspace_with_items, monkeypatch
+):
+    client.patch(
+        "/v1/users/me",
+        json={
+            "linear_api_key": "lin_api_secret",
+            "linear_team_id": "team-abc",
+        },
+    )
+
+    def fake_create_issue(**kwargs):
+        if kwargs["title"] == "Beta":
+            raise linear_export.LinearExportError("graphql error: nope")
+        return {"id": "ok"}
+
+    monkeypatch.setattr(exports, "create_issue", fake_create_issue)
+
+    response = client.post(
+        f"/v1/workspaces/{workspace_with_items}/export/linear"
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["created"] == 1
+    assert body["failed"] == 1
+    assert body["failures"] == [
+        {"title": "Beta", "error": "graphql error: nope"}
+    ]
+
+
+def test_users_me_exposes_linear_status(client):
+    response = client.get("/v1/users/me")
+    body = response.json()
+    assert body["linear_configured"] is False
+    assert body["linear_team_id"] is None
+
+    client.patch(
+        "/v1/users/me",
+        json={
+            "linear_api_key": "lin_api_xyz",
+            "linear_team_id": "team-1",
+        },
+    )
+    body = client.get("/v1/users/me").json()
+    assert body["linear_configured"] is True
+    assert body["linear_team_id"] == "team-1"
+    assert "linear_api_key" not in body

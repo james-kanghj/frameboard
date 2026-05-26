@@ -15,6 +15,7 @@ from app.api.deps import CurrentUser, require_workspace_owner
 from app.crud import backlog_item as item_crud
 from app.db.session import get_db
 from app.models.workspace import Workspace
+from app.services.linear_export import LinearExportError, create_issue
 from app.services.notion_export import NotionExportError, create_page
 
 router = APIRouter(prefix="/workspaces")
@@ -68,6 +69,49 @@ def export_to_notion(
             )
             created += 1
         except NotionExportError as e:
+            failures.append(ExportFailure(title=item.title, error=str(e)))
+
+    return ExportResult(
+        created=created, failed=len(failures), failures=failures
+    )
+
+
+@router.post(
+    "/{workspace_id}/export/linear", response_model=ExportResult
+)
+def export_to_linear(
+    current_user: CurrentUser,
+    workspace: Workspace = Depends(require_workspace_owner),
+    db: Session = Depends(get_db),
+) -> ExportResult:
+    """Push every workspace item into Linear as a new issue under the
+    caller's configured team. Same partial-failure shape as the Notion
+    export — a per-row error doesn't abort the run."""
+    api_key = current_user.linear_api_key
+    team_id = current_user.linear_team_id
+    if not api_key or not team_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Linear integration is not configured. Set "
+                "`linear_api_key` and `linear_team_id` via "
+                "PATCH /v1/users/me first."
+            ),
+        )
+
+    items = item_crud.list_items(db, workspace_id=workspace.id)
+    created = 0
+    failures: list[ExportFailure] = []
+    for item in items:
+        try:
+            create_issue(
+                api_key=api_key,
+                team_id=team_id,
+                title=item.title,
+                description=item.description,
+            )
+            created += 1
+        except LinearExportError as e:
             failures.append(ExportFailure(title=item.title, error=str(e)))
 
     return ExportResult(

@@ -84,12 +84,16 @@ export interface UserMe {
   createdAt: string;
   notionConfigured: boolean;
   notionDatabaseId: string | null;
+  linearConfigured: boolean;
+  linearTeamId: string | null;
 }
 
 export interface UserMeUpdateInput {
   // Empty string = disconnect, non-empty = set, omitted = leave alone.
   notionAccessToken?: string;
   notionDatabaseId?: string;
+  linearApiKey?: string;
+  linearTeamId?: string;
 }
 
 export interface ExportFailure {

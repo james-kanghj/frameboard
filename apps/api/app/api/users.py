@@ -35,11 +35,15 @@ class UserMeRead(BaseModel):
     # ever holding the raw secret.
     notion_configured: bool = False
     notion_database_id: str | None = None
+    linear_configured: bool = False
+    linear_team_id: str | None = None
 
 
 class UserMeUpdate(BaseModel):
     notion_access_token: str | None = Field(default=None, max_length=255)
     notion_database_id: str | None = Field(default=None, max_length=64)
+    linear_api_key: str | None = Field(default=None, max_length=255)
+    linear_team_id: str | None = Field(default=None, max_length=64)
 
 
 def _to_read(user) -> UserMeRead:  # noqa: ANN001 — ORM row
@@ -50,6 +54,8 @@ def _to_read(user) -> UserMeRead:  # noqa: ANN001 — ORM row
         created_at=user.created_at,
         notion_configured=bool(user.notion_access_token),
         notion_database_id=user.notion_database_id,
+        linear_configured=bool(user.linear_api_key),
+        linear_team_id=user.linear_team_id,
     )
 
 
@@ -67,12 +73,16 @@ def update_me(
     """Partial update — only the fields the caller sends are written.
     Pass an empty string for a token field to clear it (disconnect)."""
     fields = payload.model_dump(exclude_unset=True)
+    # Treat empty string as "disconnect" so the frontend can clear an
+    # integration without a dedicated DELETE endpoint.
     if "notion_access_token" in fields:
-        # Treat empty string as "disconnect" so the frontend can clear
-        # the integration without a dedicated DELETE endpoint.
         current_user.notion_access_token = fields["notion_access_token"] or None
     if "notion_database_id" in fields:
         current_user.notion_database_id = fields["notion_database_id"] or None
+    if "linear_api_key" in fields:
+        current_user.linear_api_key = fields["linear_api_key"] or None
+    if "linear_team_id" in fields:
+        current_user.linear_team_id = fields["linear_team_id"] or None
     db.commit()
     db.refresh(current_user)
     return _to_read(current_user)
