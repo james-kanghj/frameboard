@@ -8,7 +8,7 @@ Create Date: 2026-05-26 02:00:00.000000
 
 Stored on the user row (rather than a separate table) because the
 integration is one-per-user and the token is the only fact we care
-about — no JSON metadata, no expiry, no multi-account. Both columns
+about - no JSON metadata, no expiry, no multi-account. Both columns
 are nullable; null means "not configured yet, refuse to export."
 
 Tokens land in cleartext for the MVP. A production-grade follow-up

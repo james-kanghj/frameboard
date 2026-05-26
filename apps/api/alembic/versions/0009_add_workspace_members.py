@@ -11,7 +11,7 @@ workspaces get a member row for their current `owner_id` with role
 "owner" so behaviour is byte-identical until the new invite endpoint
 adds more members.
 
-Workspace.owner_id stays on the table — it's still the denormalised
+Workspace.owner_id stays on the table - it's still the denormalised
 "primary owner" pointer used by every existing ownership check and by
 the cascade rules. The members table is purely additive for now;
 non-owner members get role = "scorer".
@@ -50,8 +50,8 @@ def upgrade() -> None:
             nullable=False,
             index=True,
         ),
-        # "owner" — full destructive perms (rename, delete workspace,
-        # manage members). "scorer" — can read, score, edit, complete
+        # "owner" - full destructive perms (rename, delete workspace,
+        # manage members). "scorer" - can read, score, edit, complete
         # items but can't change workspace metadata.
         sa.Column("role", sa.String(20), nullable=False),
         sa.Column(
@@ -69,7 +69,7 @@ def upgrade() -> None:
     # gen_random_uuid() comes from pgcrypto in modern Postgres; the
     # initial migration enabled the extension we need, but to be
     # defensive we go through `sa.text()` so the cast happens at SQL
-    # level. SQLite (used in tests) won't run this branch — tests start
+    # level. SQLite (used in tests) won't run this branch - tests start
     # from create_all and tests' setup adds members via the CRUD path.
     bind = op.get_bind()
     if bind.dialect.name == "postgresql":

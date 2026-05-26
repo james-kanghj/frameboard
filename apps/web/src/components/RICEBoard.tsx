@@ -151,7 +151,7 @@ export function RICEBoard({
   // server's board ordering: score DESC (nulls last), then created_at ASC.
   const sortedItems = useMemo(() => sortByScore(items), [items]);
 
-  // All distinct tags present in the workspace — drives the tag chip
+  // All distinct tags present in the workspace - drives the tag chip
   // group in the filter bar. Sorted case-insensitively for stable order.
   const allTags = useMemo(() => {
     const set = new Set<string>();
@@ -179,7 +179,7 @@ export function RICEBoard({
     } else if (status === "unscored") {
       result = result.filter((it) => it.riceScore === null);
     }
-    // Effort / score buckets only apply to scored items — an unscored item
+    // Effort / score buckets only apply to scored items - an unscored item
     // has no effort or score to bucket against.
     if (effort !== "all" || scoreBucket !== "all") {
       const effortTest = EFFORT_BUCKETS.find((b) => b.value === effort)!.test;
@@ -644,7 +644,7 @@ function BarsView({ items }: { items: BacklogItem[] }) {
 // PM's classic 2×2: Effort (X axis, low → high) vs Score (Y axis, low →
 // high). Dashed median lines split the plot into Quick wins (top-left),
 // Big bets (top-right), Fill-ins (bottom-left), Avoid (bottom-right).
-// Pure SVG, native <title> tooltip on each dot — no chart library.
+// Pure SVG, native <title> tooltip on each dot - no chart library.
 function ScatterView({ items }: { items: BacklogItem[] }) {
   const scored = items.filter((it) => it.riceScore !== null);
   if (scored.length < 2) return null;
@@ -694,7 +694,7 @@ function ScatterView({ items }: { items: BacklogItem[] }) {
         strokeWidth="1"
       />
 
-      {/* Median lines — split into quadrants */}
+      {/* Median lines - split into quadrants */}
       <line
         x1={x(medEffort)}
         y1={PAD_T}
@@ -843,7 +843,7 @@ function ScatterView({ items }: { items: BacklogItem[] }) {
 // ───────────────────────────────────────────────────────────── Metric legend ──
 
 // Compact key shown above the table so newcomers know what each column
-// means without hunting for docs. Each entry has an (i) button — hover,
+// means without hunting for docs. Each entry has an (i) button - hover,
 // focus, or tap to open a richer explanation (e.g. what the 0.25/0.5/1
 // Impact values actually mean). Tooltip is portal'd so it can't be
 // clipped by overflow containers or stacking contexts.
@@ -859,7 +859,7 @@ function MetricLegend() {
       detail: (
         <>
           <p className="font-medium text-slate-900">How many users (or events) are touched per time period.</p>
-          <p className="mt-2">Pick a unit and use it consistently across the workspace — <em>per quarter</em> is the standard PM default.</p>
+          <p className="mt-2">Pick a unit and use it consistently across the workspace - <em>per quarter</em> is the standard PM default.</p>
           <p className="mt-2 text-slate-500">Example: <span className="font-mono">5000</span> = 5,000 users / quarter.</p>
         </>
       ),
@@ -871,11 +871,11 @@ function MetricLegend() {
         <>
           <p className="font-medium text-slate-900">How much each affected user benefits. RICE uses a fixed five-point scale:</p>
           <ul className="mt-2 space-y-1">
-            <li><span className="font-mono">0.25</span> — minimal (barely noticed)</li>
-            <li><span className="font-mono">0.5</span> — low (small lift)</li>
-            <li><span className="font-mono">1</span> — medium (noticeable)</li>
-            <li><span className="font-mono">2</span> — high (clear win)</li>
-            <li><span className="font-mono">3</span> — massive (transformative)</li>
+            <li><span className="font-mono">0.25</span> - minimal (barely noticed)</li>
+            <li><span className="font-mono">0.5</span> - low (small lift)</li>
+            <li><span className="font-mono">1</span> - medium (noticeable)</li>
+            <li><span className="font-mono">2</span> - high (clear win)</li>
+            <li><span className="font-mono">3</span> - massive (transformative)</li>
           </ul>
         </>
       ),
@@ -887,11 +887,11 @@ function MetricLegend() {
         <>
           <p className="font-medium text-slate-900">Your confidence in the other three numbers (0–1).</p>
           <ul className="mt-2 space-y-1">
-            <li><span className="font-mono">1.0</span> — backed by data / experiment</li>
-            <li><span className="font-mono">~0.8</span> — strong gut feel</li>
-            <li><span className="font-mono">~0.5</span> — best guess, very unsure</li>
+            <li><span className="font-mono">1.0</span> - backed by data / experiment</li>
+            <li><span className="font-mono">~0.8</span> - strong gut feel</li>
+            <li><span className="font-mono">~0.5</span> - best guess, very unsure</li>
           </ul>
-          <p className="mt-2 text-slate-500">Acts as a hedge — the score is multiplied by this, so low confidence pulls big-sounding items back down.</p>
+          <p className="mt-2 text-slate-500">Acts as a hedge - the score is multiplied by this, so low confidence pulls big-sounding items back down.</p>
         </>
       ),
     },
@@ -901,7 +901,7 @@ function MetricLegend() {
       detail: (
         <>
           <p className="font-medium text-slate-900">How long one team member would take to ship this end-to-end, in person-months.</p>
-          <p className="mt-2">Include design, development, QA, and rollout — not just dev time.</p>
+          <p className="mt-2">Include design, development, QA, and rollout - not just dev time.</p>
           <p className="mt-2 text-slate-500">Example: <span className="font-mono">2</span> = roughly 2 engineer-months (or 1 designer + 1 engineer for a month).</p>
         </>
       ),
@@ -911,7 +911,7 @@ function MetricLegend() {
       def: "(Reach × Impact × Confidence) / Effort",
       detail: (
         <>
-          <p className="font-medium text-slate-900">The final RICE score — higher = more bang per person-month.</p>
+          <p className="font-medium text-slate-900">The final RICE score - higher = more bang per person-month.</p>
           <p className="mt-2 font-mono text-slate-700">score = (R × I × C) ÷ E</p>
           <p className="mt-2 text-slate-500">Recomputes the moment you edit any of the four inputs. Sort the board by this column (descending) to see what to ship first.</p>
         </>
@@ -929,7 +929,7 @@ function MetricLegend() {
           <div key={term} className="space-y-0.5">
             <dt className="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
               <span>{term}</span>
-              <InfoTooltip label={`${term} — more info`}>{detail}</InfoTooltip>
+              <InfoTooltip label={`${term} - more info`}>{detail}</InfoTooltip>
             </dt>
             <dd className="text-slate-600">{def}</dd>
           </div>
@@ -961,7 +961,7 @@ function InfoTooltip({
     const btn = buttonRef.current.getBoundingClientRect();
     // Tooltip width is fixed via the className below; clamp position so
     // it can't overflow the viewport on either edge (was happening for
-    // the leftmost metric "Reach" — half the bubble fell off-screen).
+    // the leftmost metric "Reach" - half the bubble fell off-screen).
     const TIP_WIDTH = 288; // matches w-72
     const MARGIN = 8;
     const center = btn.left + btn.width / 2 - TIP_WIDTH / 2;
@@ -1330,7 +1330,7 @@ function BoardRow({
           onChangeField={updateOneField}
         />
       ) : item.riceAggregate ? (
-        // Other members scored this item but the current user hasn't —
+        // Other members scored this item but the current user hasn't -
         // surface the team aggregate alongside a "Score" button so the
         // current user can join in.
         <ScoredByOthersCells
@@ -1467,10 +1467,10 @@ function ScoredByOthersCells({
 }) {
   return (
     <>
-      <td className="px-3 py-3 text-right text-slate-300">—</td>
-      <td className="px-3 py-3 text-slate-300">—</td>
-      <td className="px-3 py-3 text-right text-slate-300">—</td>
-      <td className="px-3 py-3 text-right text-slate-300">—</td>
+      <td className="px-3 py-3 text-right text-slate-300">-</td>
+      <td className="px-3 py-3 text-slate-300">-</td>
+      <td className="px-3 py-3 text-right text-slate-300">-</td>
+      <td className="px-3 py-3 text-right text-slate-300">-</td>
       <td className="bg-slate-50/70 px-3 py-2 text-right">
         <div className="flex flex-col items-end gap-1">
           <ScoreDisplay
@@ -1494,10 +1494,10 @@ function ScoredByOthersCells({
 function UnscoredCells({ onStartScoring }: { onStartScoring: () => void }) {
   return (
     <>
-      <td className="px-3 py-3 text-right text-slate-300">—</td>
-      <td className="px-3 py-3 text-slate-300">—</td>
-      <td className="px-3 py-3 text-right text-slate-300">—</td>
-      <td className="px-3 py-3 text-right text-slate-300">—</td>
+      <td className="px-3 py-3 text-right text-slate-300">-</td>
+      <td className="px-3 py-3 text-slate-300">-</td>
+      <td className="px-3 py-3 text-right text-slate-300">-</td>
+      <td className="px-3 py-3 text-right text-slate-300">-</td>
       <td className="bg-slate-50/70 px-3 py-2 text-right">
         <button
           type="button"
@@ -1755,7 +1755,7 @@ function RowMenu({
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
-    // Close on scroll/resize rather than tracking — simpler and matches
+    // Close on scroll/resize rather than tracking - simpler and matches
     // common dropdown UX.
     function onReposition() {
       setOpen(false);

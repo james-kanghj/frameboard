@@ -184,7 +184,7 @@ interface TargetSpec {
   // is already saved (the value itself is never echoed back).
   tokenLabel: string;
   tokenPlaceholder: string;
-  // Public id field — Notion has database id, Linear has team id.
+  // Public id field - Notion has database id, Linear has team id.
   publicIdLabel: string;
   publicIdPlaceholder: string;
   // Read the saved public id off UserMe, write the credentials back.

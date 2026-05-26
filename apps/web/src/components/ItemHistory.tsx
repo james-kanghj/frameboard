@@ -12,7 +12,7 @@ const RICE_KEYS = ["reach", "impact", "confidence", "effort", "score"] as const;
 
 interface Props {
   itemId: string;
-  // Bumped by the parent every time it saves an edit — invalidates the
+  // Bumped by the parent every time it saves an edit - invalidates the
   // cached history so the panel refetches the new row(s) immediately.
   refreshKey?: number;
 }
@@ -22,7 +22,7 @@ export function ItemHistory({ itemId, refreshKey = 0 }: Props) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch only when the section is opened and on each save round-trip —
+  // Fetch only when the section is opened and on each save round-trip -
   // closed-state visits don't burn a request.
   useEffect(() => {
     if (!open) return;
@@ -129,7 +129,7 @@ function buildDiffs(entry: ItemHistoryEntry): Diff[] {
       return [
         {
           label: "Scored",
-          before: "—",
+          before: "-",
           after: `score ${formatNumber(entry.after.score)}`,
         },
       ];
@@ -139,7 +139,7 @@ function buildDiffs(entry: ItemHistoryEntry): Diff[] {
         {
           label: "Cleared",
           before: `score ${formatNumber(entry.before.score)}`,
-          after: "—",
+          after: "-",
         },
       ];
     }
@@ -156,10 +156,10 @@ function buildDiffs(entry: ItemHistoryEntry): Diff[] {
           });
         }
       }
-      return out.length > 0 ? out : [{ label: "—", before: "(no change)", after: "" }];
+      return out.length > 0 ? out : [{ label: "-", before: "(no change)", after: "" }];
     }
   }
-  // "fields" kind — render each changed key as its own line.
+  // "fields" kind - render each changed key as its own line.
   const before = entry.before ?? {};
   const after = entry.after ?? {};
   const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
@@ -182,7 +182,7 @@ function formatNumber(v: unknown): string {
 }
 
 function formatValue(v: unknown): string {
-  if (v === null || v === undefined || v === "") return "—";
+  if (v === null || v === undefined || v === "") return "-";
   if (Array.isArray(v)) return v.length === 0 ? "[]" : v.join(", ");
   return String(v);
 }

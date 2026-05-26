@@ -3,7 +3,7 @@
 // Returns the raw session JWT cookie to the client so the in-browser
 // API client can attach it as `Authorization: Bearer <jwt>` when
 // calling the FastAPI backend. The cookie itself is HTTP-only (set by
-// NextAuth) so JS can't read it — this endpoint is the bridge.
+// NextAuth) so JS can't read it - this endpoint is the bridge.
 
 export const runtime = "edge";
 

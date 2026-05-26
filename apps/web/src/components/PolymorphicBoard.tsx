@@ -1,7 +1,7 @@
 "use client";
 
 // Board variant for non-RICE workspaces (ICE / MoSCoW / ValueEffort).
-// RICEBoard stays untouched — its inline editing, charts, and effort/score
+// RICEBoard stays untouched - its inline editing, charts, and effort/score
 // bucket filters are RICE-shaped. This component renders a leaner table
 // (title + tags + score + actions) plus a framework-aware scoring modal
 // so the other three frameworks are usable without dragging RICE-only
@@ -425,7 +425,7 @@ function MetricLegend({ config }: { config: FrameworkConfig }) {
           <div key={term} className="space-y-0.5">
             <dt className="flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-500">
               <span>{term}</span>
-              <InfoTooltip label={`${term} — more info`}>{detail}</InfoTooltip>
+              <InfoTooltip label={`${term} - more info`}>{detail}</InfoTooltip>
             </dt>
             <dd className="text-slate-600">{def}</dd>
           </div>
@@ -744,9 +744,9 @@ function PolyScoreDisplay({
 }
 
 function renderInputCell(score: ScoreData | null, def: ScoreInputDef): string {
-  if (!score) return "—";
+  if (!score) return "-";
   const v = score.inputs[def.key];
-  if (v === undefined || v === null) return "—";
+  if (v === undefined || v === null) return "-";
   if (typeof v === "number") {
     return Number.isInteger(v) ? String(v) : v.toFixed(2);
   }
@@ -1040,13 +1040,13 @@ function EditItemModal({
               Score
             </span>
             <span className="text-lg font-semibold tabular-nums text-slate-900">
-              {livePreview !== null ? livePreview.toFixed(2) : "—"}
+              {livePreview !== null ? livePreview.toFixed(2) : "-"}
             </span>
           </div>
 
           {partial && (
             <p className="text-xs text-amber-700">
-              Fill in every input to score this item — or clear them all
+              Fill in every input to score this item - or clear them all
               to save only Title/Description changes.
             </p>
           )}
@@ -1099,7 +1099,7 @@ function ScoreInputField({
           disabled={disabled}
           className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 disabled:opacity-60"
         >
-          <option value="">— pick one —</option>
+          <option value="">- pick one -</option>
           {def.options.map((opt) => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
@@ -1114,7 +1114,7 @@ function ScoreInputField({
           disabled={disabled}
           className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500 disabled:opacity-60"
         >
-          <option value="">— pick one —</option>
+          <option value="">- pick one -</option>
           {def.options.map((v) => (
             <option key={v} value={v}>
               {v}

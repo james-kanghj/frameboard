@@ -52,7 +52,7 @@ def update_workspace(
     name: str | None = None,
     framework: str | None = None,
 ) -> Workspace | None:
-    """Partial update — None fields are left alone. Returns None if the
+    """Partial update - None fields are left alone. Returns None if the
     workspace doesn't exist so the router can 404."""
     workspace = db.get(Workspace, workspace_id)
     if workspace is None:
@@ -67,7 +67,7 @@ def update_workspace(
 
 
 def list_workspaces(db: Session, *, user_id: UUID) -> list[Workspace]:
-    """Workspaces the user has membership in — owner OR scorer. The
+    """Workspaces the user has membership in - owner OR scorer. The
     callsite in `app/api/workspaces.py` passes `current_user.id`, so
     invited scorers see the shared workspace in their listing alongside
     workspaces they own."""
@@ -79,7 +79,7 @@ def list_workspaces(db: Session, *, user_id: UUID) -> list[Workspace]:
 
 
 def get_workspace(db: Session, workspace_id: UUID) -> Workspace | None:
-    # No selectinload(items) — the detail endpoint returns just metadata
+    # No selectinload(items) - the detail endpoint returns just metadata
     # (matching WorkspaceRead). Callers needing items use /board, which has
     # its own optimized query with the right ordering.
     return db.get(Workspace, workspace_id)

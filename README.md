@@ -2,7 +2,7 @@
 
 # Frameboard
 
-**An open-source workspace for product teams to run RICE, ICE, MoSCoW, and Kano prioritization — without leaving the browser.**
+**An open-source workspace for product teams to run RICE, ICE, MoSCoW, and Kano prioritization - without leaving the browser.**
 
 ### 🚀 [Live demo → frameboard.pages.dev](https://frameboard.pages.dev)
 
@@ -25,17 +25,17 @@
 
 ## Screenshots
 
-The Q2 roadmap board at a glance — Members + Export + Add controls, framework-aware metric legend, Top-10 bar chart, the table, and the filter chips:
+The Q2 roadmap board at a glance - Members + Export + Add controls, framework-aware metric legend, Top-10 bar chart, the table, and the filter chips:
 
-![Board hero — Q2 2026 Roadmap with members, export, filters, and bar chart](./docs/screenshots/01-board-hero.png)
+![Board hero - Q2 2026 Roadmap with members, export, filters, and bar chart](./docs/screenshots/01-board-hero.png)
 
 <table>
   <tr>
-    <td width="50%"><strong>Pick a framework per workspace</strong><br><sub>Custom dropdown on the create modal — every workspace can use a different prioritization framework</sub></td>
+    <td width="50%"><strong>Pick a framework per workspace</strong><br><sub>Custom dropdown on the create modal - every workspace can use a different prioritization framework</sub></td>
     <td width="50%"><strong>ICE board</strong><br><sub>Polymorphic board with framework-specific columns (Impact / Confidence / Ease, 1–10 scale) and the I × C × E formula in the legend</sub></td>
   </tr>
   <tr>
-    <td><a href="./docs/screenshots/13-framework-picker.png"><img src="./docs/screenshots/13-framework-picker.png" alt="Framework dropdown on the create workspace modal — RICE, ICE, Value × Effort, MoSCoW"></a></td>
+    <td><a href="./docs/screenshots/13-framework-picker.png"><img src="./docs/screenshots/13-framework-picker.png" alt="Framework dropdown on the create workspace modal - RICE, ICE, Value × Effort, MoSCoW"></a></td>
     <td><a href="./docs/screenshots/07-ice-board.png"><img src="./docs/screenshots/07-ice-board.png" alt="ICE board with Impact / Confidence / Ease columns"></a></td>
   </tr>
   <tr>
@@ -47,7 +47,7 @@ The Q2 roadmap board at a glance — Members + Export + Add controls, framework-
     <td><a href="./docs/screenshots/09-value-effort-board.png"><img src="./docs/screenshots/09-value-effort-board.png" alt="Value × Effort board"></a></td>
   </tr>
   <tr>
-    <td width="50%"><strong>Invite teammates by email</strong><br><sub>Members modal — owner adds scorers; each member writes their own score row and the board ranks by the team aggregate</sub></td>
+    <td width="50%"><strong>Invite teammates by email</strong><br><sub>Members modal - owner adds scorers; each member writes their own score row and the board ranks by the team aggregate</sub></td>
     <td width="50%"><strong>Export menu (CSV / Notion / Linear)</strong><br><sub>Three targets behind a single dropdown. CSV downloads client-side; Notion and Linear hit per-user tokens stored against the user</sub></td>
   </tr>
   <tr>
@@ -63,7 +63,7 @@ The Q2 roadmap board at a glance — Members + Export + Add controls, framework-
     <td><a href="./docs/screenshots/02-scatter-view.png"><img src="./docs/screenshots/02-scatter-view.png" alt="Effort × Score scatter plot"></a></td>
   </tr>
   <tr>
-    <td width="50%"><strong>Filter chips — Effort / Score / Tag / Completed</strong><br><sub>Each chip group writes its state into the URL so a focused view is shareable</sub></td>
+    <td width="50%"><strong>Filter chips - Effort / Score / Tag / Completed</strong><br><sub>Each chip group writes its state into the URL so a focused view is shareable</sub></td>
     <td width="50%"><strong>Inline (i) tooltips on every metric</strong><br><sub>Hover, focus, or tap for the framework-specific scale (0.25 → 3 for RICE Impact, 1–10 for ICE, bucket labels for MoSCoW)</sub></td>
   </tr>
   <tr>
@@ -80,13 +80,13 @@ Product managers waste hours each sprint debating "what to build next" in spread
 
 **Frameboard is different:**
 
-- 🧮 **Multi-framework** — Pick RICE, ICE, Value × Effort, or MoSCoW per workspace. Each board renders inputs, metric legend, and scoring formula tailored to the framework you picked
-- 👥 **Real collaborative scoring** — Invite teammates by email, every member saves their own scoring inputs, and the board ranks by the team aggregate (mean) with a min–max spread + contributor chip so disagreement is visible at a glance
-- ☑️ **Ship-it tracking** — Per-row completion checkbox; shipped items sink to the bottom of the active board automatically and only resurface when you toggle "Show completed" for the retro
-- 📤 **Export-first** — One-click CSV download (framework-aware columns) or push the workspace to Notion / Linear with token-based per-user integrations; partial failures reported per row
-- 🔐 **Sign in with GitHub** — NextAuth on the frontend, JWT-verified ownership checks on the backend. `AUTH_DISABLED=1` bypass for self-hosters who don't want OAuth
-- 📊 **PM-shaped visuals** — Top-N bar chart and Effort × Score scatter (Quick wins / Big bets / Fill-ins / Avoid) on RICE boards; URL-synced filters (`?q=…&status=…&effort=…&score=…&tag=…&completed=show`) for sharing a working view
-- 🚀 **Self-hostable** — One Docker command. Your data stays yours
+- 🧮 **Multi-framework** - Pick RICE, ICE, Value × Effort, or MoSCoW per workspace. Each board renders inputs, metric legend, and scoring formula tailored to the framework you picked
+- 👥 **Real collaborative scoring** - Invite teammates by email, every member saves their own scoring inputs, and the board ranks by the team aggregate (mean) with a min–max spread + contributor chip so disagreement is visible at a glance
+- ☑️ **Ship-it tracking** - Per-row completion checkbox; shipped items sink to the bottom of the active board automatically and only resurface when you toggle "Show completed" for the retro
+- 📤 **Export-first** - One-click CSV download (framework-aware columns) or push the workspace to Notion / Linear with token-based per-user integrations; partial failures reported per row
+- 🔐 **Sign in with GitHub** - NextAuth on the frontend, JWT-verified ownership checks on the backend. `AUTH_DISABLED=1` bypass for self-hosters who don't want OAuth
+- 📊 **PM-shaped visuals** - Top-N bar chart and Effort × Score scatter (Quick wins / Big bets / Fill-ins / Avoid) on RICE boards; URL-synced filters (`?q=…&status=…&effort=…&score=…&tag=…&completed=show`) for sharing a working view
+- 🚀 **Self-hostable** - One Docker command. Your data stays yours
 
 ## Status
 
@@ -138,13 +138,13 @@ cp apps/web/.env.example apps/web/.env.development.local
 Then in two terminals:
 
 ```bash
-# Terminal A — backend
+# Terminal A - backend
 cd apps/api && source .venv/bin/activate
 uvicorn app.main:app --reload --port 8001
 ```
 
 ```bash
-# Terminal B — frontend
+# Terminal B - frontend
 pnpm --filter @frameboard/web dev
 ```
 
@@ -160,7 +160,7 @@ If you'd rather run the whole stack as containers (no local Python / pnpm instal
 docker compose -f docker-compose.selfhost.yml up -d --build
 ```
 
-Brings up Postgres (`:5433`), the FastAPI backend (`:8001`), and the Next.js frontend (`:3000`). The backend auto-runs Alembic migrations on boot, so a fresh DB initializes itself. Override the build args in `docker-compose.selfhost.yml` if you're hosting under a custom domain — `NEXT_PUBLIC_API_BASE_URL` is inlined at build time and needs a rebuild to change.
+Brings up Postgres (`:5433`), the FastAPI backend (`:8001`), and the Next.js frontend (`:3000`). The backend auto-runs Alembic migrations on boot, so a fresh DB initializes itself. Override the build args in `docker-compose.selfhost.yml` if you're hosting under a custom domain - `NEXT_PUBLIC_API_BASE_URL` is inlined at build time and needs a rebuild to change.
 
 ### Production auth setup
 
@@ -194,7 +194,7 @@ on the JWT's `email` claim.
 | Monorepo | pnpm workspaces + Turborepo                                |
 | Testing  | pytest (129 tests, backend), Playwright (5 e2e scenarios)  |
 | Deploy   | Cloudflare Pages (frontend) + Render (backend) + Neon (DB) |
-| CI       | GitHub Actions — web, api, e2e jobs all gated on PRs       |
+| CI       | GitHub Actions - web, api, e2e jobs all gated on PRs       |
 
 ## Roadmap
 
@@ -210,32 +210,32 @@ on the JWT's `email` claim.
 - [x] Public hosted instance ([frameboard.pages.dev](https://frameboard.pages.dev))
 - [x] Score distribution chart (top-N horizontal bars above the table)
 - [x] Effort × Score scatter plot (PM-style 2×2 quadrant, tab-toggled with the bar chart)
-- [x] Board search — title + description, with URL state (`?q=`)
-- [x] Board status filter — All / Scored / Unscored segmented toggle (URL `?status=`)
-- [x] Board quick-wins filter — effort + score bucket chips (URL `?effort=` `?score=`)
-- [x] Metric legend tooltips — `(i)` buttons explain Reach / Impact (0.25→3 scale) / Confidence / Effort / Score
-- [x] Self-host Docker image — `docker compose -f docker-compose.selfhost.yml up --build` brings up Postgres + API + Web
-- [x] Item tags / categories — JSON column on items, pill input in the edit modal, tag chip filter on the board (URL `?tag=`)
-- [x] Score history / change-log timeline per item — append-only `item_history` table records RICE changes and field edits; collapsible timeline in the edit modal
-- [x] ICE / MoSCoW / Value-vs-Effort frameworks — backend: `workspace.framework`, polymorphic `item_scores` table, unified `POST /v1/score`, framework-aware board ordering. Frontend: custom framework picker on the create-workspace modal, dedicated polymorphic board for non-RICE workspaces with per-framework inputs (1–10 sliders for ICE, V/E numeric pair for Value × Effort, Must/Should/Could/Won't select for MoSCoW), framework-aware metric legend, (i) tooltips, and an intro line per board.
-- [x] Multi-user auth (NextAuth.js + JWT) — GitHub OAuth on the frontend, HS256 JWT verification on the backend with cross-user ownership checks on every endpoint. Floating user badge on every page (avatar + email + Sign out). `AUTH_DISABLED=1` bypass for self-host / local dev (mirrored on both sides).
-- [x] Item completion — nullable `completed_at` on `backlog_items` (migration 0006), checkbox column on every board, completed items strikethrough + sink to the bottom regardless of score. "Show completed" filter toggle (URL `?completed=show`) mixes them back in for retros. History log captures mark/unmark events automatically via the field-diff hook.
-- [~] CSV / Jira / Linear / Notion export — CSV (client-side, framework-aware columns), Notion (REST, token + database id), and Linear (GraphQL, personal API key + team id) all shipped. Per-target setup flow lives in the in-app Export menu; partial-success reporting (created / failed counts + per-row error) is shared across integrations. Jira integration still TODO.
-- [x] Collaborative scoring — workspace_members table + invite-by-email (Phase A), per-user `rice_scores` / `item_scores` rows with `(item_id, user_id, framework)` unique key (Phase B), and board surfaces the team aggregate (mean + variance + min/max spread + contributor chip) sourced from those per-user rows (Phase C). Each member's inline edits write only their own row; deletes only clear their own. Sort key on every board now uses the aggregate, not the caller's personal score.
+- [x] Board search - title + description, with URL state (`?q=`)
+- [x] Board status filter - All / Scored / Unscored segmented toggle (URL `?status=`)
+- [x] Board quick-wins filter - effort + score bucket chips (URL `?effort=` `?score=`)
+- [x] Metric legend tooltips - `(i)` buttons explain Reach / Impact (0.25→3 scale) / Confidence / Effort / Score
+- [x] Self-host Docker image - `docker compose -f docker-compose.selfhost.yml up --build` brings up Postgres + API + Web
+- [x] Item tags / categories - JSON column on items, pill input in the edit modal, tag chip filter on the board (URL `?tag=`)
+- [x] Score history / change-log timeline per item - append-only `item_history` table records RICE changes and field edits; collapsible timeline in the edit modal
+- [x] ICE / MoSCoW / Value-vs-Effort frameworks - backend: `workspace.framework`, polymorphic `item_scores` table, unified `POST /v1/score`, framework-aware board ordering. Frontend: custom framework picker on the create-workspace modal, dedicated polymorphic board for non-RICE workspaces with per-framework inputs (1–10 sliders for ICE, V/E numeric pair for Value × Effort, Must/Should/Could/Won't select for MoSCoW), framework-aware metric legend, (i) tooltips, and an intro line per board.
+- [x] Multi-user auth (NextAuth.js + JWT) - GitHub OAuth on the frontend, HS256 JWT verification on the backend with cross-user ownership checks on every endpoint. Floating user badge on every page (avatar + email + Sign out). `AUTH_DISABLED=1` bypass for self-host / local dev (mirrored on both sides).
+- [x] Item completion - nullable `completed_at` on `backlog_items` (migration 0006), checkbox column on every board, completed items strikethrough + sink to the bottom regardless of score. "Show completed" filter toggle (URL `?completed=show`) mixes them back in for retros. History log captures mark/unmark events automatically via the field-diff hook.
+- [~] CSV / Jira / Linear / Notion export - CSV (client-side, framework-aware columns), Notion (REST, token + database id), and Linear (GraphQL, personal API key + team id) all shipped. Per-target setup flow lives in the in-app Export menu; partial-success reporting (created / failed counts + per-row error) is shared across integrations. Jira integration still TODO.
+- [x] Collaborative scoring - workspace_members table + invite-by-email (Phase A), per-user `rice_scores` / `item_scores` rows with `(item_id, user_id, framework)` unique key (Phase B), and board surfaces the team aggregate (mean + variance + min/max spread + contributor chip) sourced from those per-user rows (Phase C). Each member's inline edits write only their own row; deletes only clear their own. Sort key on every board now uses the aggregate, not the caller's personal score.
 
 See [GitHub Projects](https://github.com/james-kanghj/frameboard/projects) for the live board.
 
 ## Contributing
 
-Contributions are welcome — from typo fixes to new prioritization frameworks. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions are welcome - from typo fixes to new prioritization frameworks. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Maintainer
 
-Built and maintained by [James](https://github.com/james-kanghj) — a 15-year QA/SDET engineer pivoting to product management. Frameboard is the tool I wished my product managers had used.
+Built and maintained by [James](https://github.com/james-kanghj) - a 15-year QA/SDET engineer pivoting to product management. Frameboard is the tool I wished my product managers had used.
 
 ## Built with Claude Code
 
-Frameboard was bootstrapped from an empty repo to a live production deployment in a single focused day, paired with [Claude Code](https://claude.com/claude-code) as a pair-programming partner. The commit history, CI runs, and architecture decisions are all public — useful as a reference for other solo builders evaluating LLM-assisted development workflows.
+Frameboard was bootstrapped from an empty repo to a live production deployment in a single focused day, paired with [Claude Code](https://claude.com/claude-code) as a pair-programming partner. The commit history, CI runs, and architecture decisions are all public - useful as a reference for other solo builders evaluating LLM-assisted development workflows.
 
 ## License
 

@@ -224,7 +224,7 @@ def test_board_sorts_non_rice_by_score_desc(
 def test_switching_framework_on_workspace_isolates_scores(
     client, workspace_factory, item_factory
 ):
-    """An ICE board shouldn't show RICE data, and vice-versa — each
+    """An ICE board shouldn't show RICE data, and vice-versa - each
     framework reads its own table.
 
     Implementation detail: writing RICE under the unified endpoint when

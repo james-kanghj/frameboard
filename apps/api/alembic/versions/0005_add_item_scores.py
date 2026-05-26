@@ -1,6 +1,6 @@
 # /apps/api/alembic/versions/0005_add_item_scores.py
 
-"""Add `item_scores` table — polymorphic store for ICE/MoSCoW/ValueEffort.
+"""Add `item_scores` table - polymorphic store for ICE/MoSCoW/ValueEffort.
 
 Revision ID: 0005_add_item_scores
 Revises: 0004_add_workspace_framework
@@ -8,7 +8,7 @@ Create Date: 2026-05-26 00:30:00.000000
 
 The existing `rice_scores` table is left in place: RICE is the most-used
 framework and the rest of the codebase already reads from it. The new
-table is purely additive — non-RICE frameworks write here. A follow-up
+table is purely additive - non-RICE frameworks write here. A follow-up
 migration can backfill RICE into `item_scores` and drop the legacy table
 once the read-paths are unified.
 
@@ -50,7 +50,7 @@ def upgrade() -> None:
             onupdate=sa.func.now(),
             nullable=False,
         ),
-        # One score per (item, framework) — re-scoring upserts in place.
+        # One score per (item, framework) - re-scoring upserts in place.
         sa.UniqueConstraint("item_id", "framework", name="uq_item_scores_item_framework"),
     )
     op.create_index(

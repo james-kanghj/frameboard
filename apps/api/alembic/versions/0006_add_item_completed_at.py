@@ -6,7 +6,7 @@ Revision ID: 0006_add_item_completed_at
 Revises: 0005_add_item_scores
 Create Date: 2026-05-26 01:00:00.000000
 
-Nullable timestamp — null means "open / not yet shipped", a timestamp
+Nullable timestamp - null means "open / not yet shipped", a timestamp
 means "completed at this moment". Picking a timestamp over an enum
 gives `when did this ship?` for free and keeps the schema minimal.
 

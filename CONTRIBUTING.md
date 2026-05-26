@@ -4,11 +4,11 @@ Thanks for your interest in contributing! Frameboard is built to help product te
 
 ## Ways to contribute
 
-- 🐛 **Report bugs** — Use [GitHub Issues](https://github.com/james-kanghj/frameboard/issues)
-- 💡 **Propose features** — Open a discussion before large changes
-- 📝 **Improve docs** — Typos, clarifications, examples are all welcome
-- 🧪 **Add prioritization frameworks** — RICE, ICE, MoSCoW, Kano are in; what's missing?
-- 🌐 **Translate** — Frameboard targets a global audience
+- 🐛 **Report bugs** - Use [GitHub Issues](https://github.com/james-kanghj/frameboard/issues)
+- 💡 **Propose features** - Open a discussion before large changes
+- 📝 **Improve docs** - Typos, clarifications, examples are all welcome
+- 🧪 **Add prioritization frameworks** - RICE, ICE, MoSCoW, Kano are in; what's missing?
+- 🌐 **Translate** - Frameboard targets a global audience
 
 ## Development setup
 

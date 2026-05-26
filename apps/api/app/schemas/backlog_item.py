@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.schemas.score import ScoreRead
 
-# Tag normalisation rules — applied uniformly on create and update so
+# Tag normalisation rules - applied uniformly on create and update so
 # the DB never holds two equivalent tags ("Infra" vs "infra"), oversized
 # strings, or empty entries.
 MAX_TAGS_PER_ITEM = 10
@@ -99,14 +99,14 @@ class BacklogItemRead(BaseModel):
     # Null = open, timestamp = shipped at that moment.
     completed_at: datetime | None = None
     # The caller's own RICE score (their reach/impact/confidence/effort
-    # row). Null when the caller hasn't scored this item yet — another
+    # row). Null when the caller hasn't scored this item yet - another
     # member may have, in which case `rice_aggregate` is populated.
     rice_score: RICEScoreRead | None = None
     # Mean across every member's RICE row + variance + contributor
     # count. Populated only by the board endpoint on RICE workspaces.
     rice_aggregate: ScoreAggregate | None = None
     # Polymorphic version of `rice_score` for ICE / MoSCoW /
-    # ValueEffort workspaces — the caller's own score.
+    # ValueEffort workspaces - the caller's own score.
     score: ScoreRead | None = None
     # Polymorphic aggregate (mean + variance + count) for non-RICE
     # workspaces.

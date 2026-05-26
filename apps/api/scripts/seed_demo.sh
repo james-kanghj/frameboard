@@ -110,7 +110,7 @@ score_rice() {
     -d "{\"item_id\":\"$id\",\"reach\":$reach,\"impact\":$impact,\"confidence\":$conf,\"effort\":$effort}"
 }
 
-# Unified scoring — `inputs` is a JSON object that varies by framework.
+# Unified scoring - `inputs` is a JSON object that varies by framework.
 score_unified() {
   local id="$1" framework="$2" inputs="$3"
   api -o /dev/null -X POST "$API/v1/score" \
@@ -164,7 +164,7 @@ process_polymorphic_item() {
 
 # ─────────────────────────────────────────────────────────── data ──
 
-# RICE workspaces — proven content from the original demo plus a few
+# RICE workspaces - proven content from the original demo plus a few
 # items pre-marked completed so the new checkbox column has something
 # to render on first load.
 Q2_ITEMS=(
@@ -212,7 +212,7 @@ INFRA_ITEMS=(
   "Migrate to Kubernetes|500|0.5|0.5|20|[\"infra\"]|"
 )
 
-# ICE — Impact / Confidence / Ease all on 1–10 scale.
+# ICE - Impact / Confidence / Ease all on 1–10 scale.
 ICE_ITEMS=(
   "A/B test pricing page copy|ICE|{\"impact\":8,\"confidence\":7,\"ease\":9}|[\"growth\",\"experiment\"]"
   "Add testimonials section|ICE|{\"impact\":6,\"confidence\":8,\"ease\":9}|[\"growth\",\"polish\"]"
@@ -224,7 +224,7 @@ ICE_ITEMS=(
   "Social proof badges|ICE|{\"impact\":4,\"confidence\":7,\"ease\":9}|[\"polish\"]"
 )
 
-# Value × Effort — V/E with V free-scale, E in person-months.
+# Value × Effort - V/E with V free-scale, E in person-months.
 VE_ITEMS=(
   "Self-serve billing portal|ValueEffort|{\"value\":9,\"effort\":4}|[\"feature\",\"integration\"]"
   "Multi-currency invoicing|ValueEffort|{\"value\":7,\"effort\":6}|[\"feature\",\"international\"]"
@@ -235,7 +235,7 @@ VE_ITEMS=(
   "Subscription pause feature|ValueEffort|{\"value\":4,\"effort\":3}|[\"feature\"]"
 )
 
-# MoSCoW — categorical priority for a release scope.
+# MoSCoW - categorical priority for a release scope.
 MOSCOW_ITEMS=(
   "User authentication|MoSCoW|{\"bucket\":\"Must\"}|[\"security\",\"feature\"]"
   "Password reset|MoSCoW|{\"bucket\":\"Must\"}|[\"security\"]"

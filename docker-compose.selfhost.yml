@@ -1,6 +1,6 @@
 # /docker-compose.selfhost.yml
 #
-# Full self-host stack — Postgres + API + Web. Spun up with:
+# Full self-host stack - Postgres + API + Web. Spun up with:
 #
 #   docker compose -f docker-compose.selfhost.yml up -d --build
 #
@@ -8,7 +8,7 @@
 # so `up`/`down` cycles keep your data.
 #
 # The plain ./docker-compose.yml at the repo root is intentionally smaller
-# (db service only) — that's the local-dev setup where the API and web run
+# (db service only) - that's the local-dev setup where the API and web run
 # directly on the host via pnpm/uvicorn. This file is for "I just want
 # to run Frameboard, give me one command" use cases.
 
@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
     environment:
       # 'db' hostname comes from the compose network. Port 5432 is the
-      # internal Postgres port — the 5433 host mapping doesn't apply
+      # internal Postgres port - the 5433 host mapping doesn't apply
       # between containers.
       DATABASE_URL: postgresql+psycopg://frameboard:frameboard@db:5432/frameboard
       API_HOST: 0.0.0.0
@@ -47,7 +47,7 @@ services:
       API_CORS_ORIGINS: http://localhost:3000
       APP_ENV: production
       APP_DEBUG: "false"
-      # JWT/secret values — replace before exposing publicly.
+      # JWT/secret values - replace before exposing publicly.
       APP_SECRET_KEY: replace-me-openssl-rand-hex-32
       JWT_SECRET_KEY: replace-me-openssl-rand-hex-32
     ports:

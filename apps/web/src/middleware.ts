@@ -2,7 +2,7 @@
 //
 // Protects /workspaces/* by redirecting unauthenticated visitors to
 // the sign-in page. Bypassed when NEXT_PUBLIC_AUTH_DISABLED=1 so
-// contributors can run the stack without registering an OAuth app —
+// contributors can run the stack without registering an OAuth app -
 // matches the backend's AUTH_DISABLED=1 behaviour.
 
 import { NextResponse } from "next/server";

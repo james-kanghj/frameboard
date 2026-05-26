@@ -50,7 +50,7 @@ export interface FrameworkConfig {
   displayName: string;
   // Compact formula displayed in the metric legend and modal hint.
   formula: string;
-  // One-liner shown above the metric legend on the board — frames
+  // One-liner shown above the metric legend on the board - frames
   // *why* the user is filling in these inputs. Different shape than
   // `formula` (which is the bare math) so the prose can read
   // naturally.
@@ -58,9 +58,9 @@ export interface FrameworkConfig {
   // Input fields rendered in the edit modal / scoring form.
   inputs: ScoreInputDef[];
   // Pure compute mirroring the backend's score_engine. Returns null when
-  // inputs are incomplete or invalid so callers can render "—" instead.
+  // inputs are incomplete or invalid so callers can render "-" instead.
   scoreFn: (inputs: Record<string, unknown>) => number | null;
-  // Metric-legend entries — small (i) tooltip explanations above the
+  // Metric-legend entries - small (i) tooltip explanations above the
   // table. Order = column order in the table.
   metrics: MetricEntry[];
   // Whether the Effort × Score scatter / Top-N bars chart applies.
@@ -164,7 +164,7 @@ export const FRAMEWORK_CONFIGS: Record<Framework, FrameworkConfig> = {
               How many users (or events) are touched per time period.
             </p>
             <p className="mt-2">
-              Pick a unit and use it consistently across the workspace —{" "}
+              Pick a unit and use it consistently across the workspace -{" "}
               <em>per quarter</em> is the standard PM default.
             </p>
           </>
@@ -180,11 +180,11 @@ export const FRAMEWORK_CONFIGS: Record<Framework, FrameworkConfig> = {
               five-point scale:
             </p>
             <ul className="mt-2 space-y-1">
-              <li><span className="font-mono">0.25</span> — minimal</li>
-              <li><span className="font-mono">0.5</span> — low</li>
-              <li><span className="font-mono">1</span> — medium</li>
-              <li><span className="font-mono">2</span> — high</li>
-              <li><span className="font-mono">3</span> — massive</li>
+              <li><span className="font-mono">0.25</span> - minimal</li>
+              <li><span className="font-mono">0.5</span> - low</li>
+              <li><span className="font-mono">1</span> - medium</li>
+              <li><span className="font-mono">2</span> - high</li>
+              <li><span className="font-mono">3</span> - massive</li>
             </ul>
           </>
         ),
@@ -243,7 +243,7 @@ export const FRAMEWORK_CONFIGS: Record<Framework, FrameworkConfig> = {
       {
         term: "Ease",
         def: "1 – 10",
-        detail: <p>How easy is it to ship — higher = less effort.</p>,
+        detail: <p>How easy is it to ship - higher = less effort.</p>,
       },
       {
         term: "Score",
@@ -310,10 +310,10 @@ export const FRAMEWORK_CONFIGS: Record<Framework, FrameworkConfig> = {
           <>
             <p className="font-medium text-slate-900">Categorical priority.</p>
             <ul className="mt-2 space-y-1">
-              <li><span className="font-mono">Must</span> — required this cycle</li>
-              <li><span className="font-mono">Should</span> — important but not blocking</li>
-              <li><span className="font-mono">Could</span> — nice-to-have</li>
-              <li><span className="font-mono">Won&apos;t</span> — explicitly out of scope</li>
+              <li><span className="font-mono">Must</span> - required this cycle</li>
+              <li><span className="font-mono">Should</span> - important but not blocking</li>
+              <li><span className="font-mono">Could</span> - nice-to-have</li>
+              <li><span className="font-mono">Won&apos;t</span> - explicitly out of scope</li>
             </ul>
           </>
         ),
@@ -323,7 +323,7 @@ export const FRAMEWORK_CONFIGS: Record<Framework, FrameworkConfig> = {
     showEffortScoreFilters: false,
   },
 
-  // Kano placeholder — backend doesn't implement it yet, but the
+  // Kano placeholder - backend doesn't implement it yet, but the
   // Framework union allows it. Fall back to a stub so the type
   // exhaustiveness check stays satisfied.
   Kano: {

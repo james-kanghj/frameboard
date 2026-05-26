@@ -3,7 +3,7 @@
 # Thin client for Notion's REST API focused on the one shape we need:
 # create a page inside a database with a Title property and an optional
 # rich-text description body. Other property mapping is intentionally
-# skipped for the MVP — users get title + body, and can extend in Notion
+# skipped for the MVP - users get title + body, and can extend in Notion
 # directly if they want richer rows.
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ def _title_property(title: str) -> dict[str, Any]:
     # The schema requires the title property to live under whatever
     # key the user named it in Notion. The default name for a new DB is
     # "Name"; we send under that key. If the user's DB uses a different
-    # title key the API responds with a "validation error" — which the
+    # title key the API responds with a "validation error" - which the
     # frontend surfaces as the failed row count.
     return {
         "Name": {

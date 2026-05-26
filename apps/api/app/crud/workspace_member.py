@@ -8,7 +8,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.crud import workspace as workspace_crud
-from app.models.user import User
 from app.models.workspace import Workspace
 from app.models.workspace_member import WorkspaceMember
 
@@ -46,7 +45,7 @@ def list_members(
 def list_workspaces_for_user(
     db: Session, *, user_id: UUID
 ) -> list[Workspace]:
-    """Workspaces the user has any membership in — owner or scorer.
+    """Workspaces the user has any membership in - owner or scorer.
     Replaces the old "filter by owner_id" path so invited members see
     the workspace in their list."""
     stmt = (
@@ -66,7 +65,7 @@ def add_member_by_email(
 ) -> WorkspaceMember:
     """Look up the user (creating one on the fly if the email is new)
     and add them to the workspace. Returns the existing membership
-    row if one already exists for this user — the call is idempotent
+    row if one already exists for this user - the call is idempotent
     so a double-click on Invite doesn't 500."""
     if role not in VALID_ROLES:
         raise ValueError(f"role must be one of {VALID_ROLES}, got {role!r}")
@@ -90,7 +89,7 @@ def remove_member(
     db: Session, *, workspace_id: UUID, user_id: UUID
 ) -> bool:
     """Removes the membership row. The primary owner can't be removed
-    — the caller is expected to enforce that before invoking. Returns
+    - the caller is expected to enforce that before invoking. Returns
     True if a row was removed, False if it didn't exist."""
     member = get_membership(
         db, workspace_id=workspace_id, user_id=user_id

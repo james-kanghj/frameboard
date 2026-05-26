@@ -1,7 +1,7 @@
 # /apps/api/app/crud/item_history.py
 #
 # Helpers that record entries in `item_history`. Callers are expected to
-# pass already-diffed payloads — these helpers do the bare minimum of
+# pass already-diffed payloads - these helpers do the bare minimum of
 # "is there anything to record?" filtering so they can sit on any CRUD
 # path without producing noisy entries (e.g. a PATCH that re-sends the
 # same title shouldn't generate a history row).
@@ -54,7 +54,7 @@ def record_score_change(
     the first-ever scoring of this item.
 
     If `before` and `after_values` are equivalent (all numeric fields
-    match), no row is written — common case is a PATCH that re-saves the
+    match), no row is written - common case is a PATCH that re-saves the
     same values."""
     before_dict = _rice_to_dict(before)
     if before_dict is not None and after_values is not None:
@@ -83,7 +83,7 @@ def record_fields_change(
     """Records a "fields" history row containing ONLY the keys whose value
     changed between `before` and `after`. If nothing changed, no row is
     written. Lists (e.g. tags) compare by equality, so reordering counts
-    as a change — that's intentional, callers that don't want order to
+    as a change - that's intentional, callers that don't want order to
     matter should normalise upstream."""
     diff_keys = [k for k in after if before.get(k) != after.get(k)]
     if not diff_keys:

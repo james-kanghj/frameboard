@@ -36,7 +36,7 @@ function toSnake(key: string): string {
 // Cross-realm-safe plain-object check. The Next.js edge runtime parses
 // fetch JSON in a different V8 realm than the page's `Object`, so the more
 // common `value.constructor === Object` returns false even for plain
-// objects — leaving snake_case keys untouched on the SSR path while the
+// objects - leaving snake_case keys untouched on the SSR path while the
 // browser path camelCases them correctly. `Object.prototype.toString`
 // reads the value's own [[Class]] slot, which is invariant across realms.
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -93,7 +93,7 @@ async function getAuthToken(): Promise<string | null> {
         if (c?.value) return c.value;
       }
     } catch {
-      // Outside a request scope (e.g. unit tests) — silently fall
+      // Outside a request scope (e.g. unit tests) - silently fall
       // through. The backend's AUTH_DISABLED=1 mode will still let
       // calls through without an Authorization header.
     }
@@ -199,7 +199,7 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
 // ---------- Workspaces ----------
 
 export function listWorkspaces(): Promise<Workspace[]> {
-  // Owner is derived from the authenticated session — no query needed.
+  // Owner is derived from the authenticated session - no query needed.
   return request<Workspace[]>("/v1/workspaces");
 }
 
@@ -265,7 +265,7 @@ export function deleteRICE(itemId: string): Promise<void> {
   return request<void>(`/v1/items/${itemId}/rice`, { method: "DELETE" });
 }
 
-// Unified scoring endpoint — works for every supported framework.
+// Unified scoring endpoint - works for every supported framework.
 // Returns the persisted ScoreData (item_id, framework, inputs, score,
 // updated_at). For RICE the backend still mirrors the value into the
 // legacy rice_scores table so the existing board read path keeps

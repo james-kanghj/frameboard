@@ -1,6 +1,6 @@
 # /apps/api/tests/test_score_engine.py
 #
-# Unit tests for the pure compute function — input validation lives in
+# Unit tests for the pure compute function - input validation lives in
 # the Pydantic schemas (covered separately by test_scores.py).
 
 from __future__ import annotations

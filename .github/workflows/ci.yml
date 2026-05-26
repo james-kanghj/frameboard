@@ -15,7 +15,7 @@ jobs:
         working-directory: apps/web
     steps:
       - uses: actions/checkout@v4
-      # No `version:` — action-setup@v4 reads it from package.json's
+      # No `version:` - action-setup@v4 reads it from package.json's
       # `packageManager` field (currently pinned to 11.3.0). Setting it
       # here was conflicting with the pin and failing the job.
       - uses: pnpm/action-setup@v4
@@ -115,7 +115,7 @@ jobs:
         env:
           NEXT_PUBLIC_API_BASE_URL: "http://localhost:8001"
           NEXT_PUBLIC_DEV_USER_EMAIL: "61649060+james-kanghj@users.noreply.github.com"
-          # NextAuth's auth.ts throws at import time without a secret —
+          # NextAuth's auth.ts throws at import time without a secret -
           # any non-empty value is fine for the disabled-auth bypass.
           NEXTAUTH_SECRET: "ci-dummy-secret-not-used"
           NEXT_PUBLIC_AUTH_DISABLED: "1"

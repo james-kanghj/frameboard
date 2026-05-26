@@ -9,7 +9,7 @@
 //
 // The BEARER env (the raw NextAuth session JWT, copyable from
 // `https://<deploy>/api/token`) is required when the live deployment
-// has auth enabled — without it the browser lands on /auth/signin and
+// has auth enabled - without it the browser lands on /auth/signin and
 // every workspace shot is a sign-in screen.
 //
 // Workspace IDs default to the production demo workspaces seeded for
@@ -35,7 +35,7 @@ const WS_MOSCOW =
 const WS_VE =
   process.env.WS_VE ?? "5d4e6a3b-e664-44c3-8a93-ff5c565b2d52";
 
-// Cookie name varies by scheme — Playwright treats https:// hosts as
+// Cookie name varies by scheme - Playwright treats https:// hosts as
 // secure, so the live deployment expects the `__Secure-` prefix.
 function buildSessionCookie() {
   if (!BEARER) return null;
@@ -84,7 +84,7 @@ const shots = [
     viewport: { width: 1280, height: 900 },
     afterLoad: async (page) => {
       await page
-        .getByRole("button", { name: "Impact — more info" })
+        .getByRole("button", { name: "Impact - more info" })
         .first()
         .hover();
       await page.waitForTimeout(400);
@@ -128,7 +128,7 @@ const shots = [
     viewport: { width: 1280, height: 720 },
     afterLoad: async (page) => {
       // Wait for the MembersMenu button to finish its preload fetch
-      // first — clicking before the initial listMembers() resolves
+      // first - clicking before the initial listMembers() resolves
       // means the modal opens with a transient "Failed to fetch" /
       // "Loading…" combo on screen.
       await page.waitForLoadState("networkidle");

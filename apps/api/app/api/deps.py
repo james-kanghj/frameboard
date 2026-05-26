@@ -29,7 +29,7 @@ from app.models.user import User
 
 
 def _user_from_email(db: Session, email: str) -> User:
-    """get-or-create — first request for a given email materialises the
+    """get-or-create - first request for a given email materialises the
     User row. Display name defaults to the local part of the email; the
     OAuth flow can update it later if a name is provided."""
     return workspace_crud.get_or_create_user(db, email)
@@ -106,7 +106,7 @@ def require_workspace_owner(
 ):
     """Loads the workspace and asserts the current user owns it. Returns
     the workspace so handlers can reuse it. 404 (not 403) when the user
-    doesn't own the workspace — leaks no information about whether the
+    doesn't own the workspace - leaks no information about whether the
     workspace exists at all."""
     workspace = workspace_crud.get_workspace(db, workspace_id)
     if workspace is None or workspace.owner_id != current_user.id:

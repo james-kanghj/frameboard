@@ -41,7 +41,7 @@ def export_to_notion(
     db: Session = Depends(get_db),
 ) -> ExportResult:
     """Push every item in the workspace into the caller's Notion
-    database as a new page. Failures don't abort the run — each row's
+    database as a new page. Failures don't abort the run - each row's
     error is collected and returned alongside the success count so a
     misconfigured database doesn't sink the whole export."""
     token = current_user.notion_access_token
@@ -86,7 +86,7 @@ def export_to_linear(
 ) -> ExportResult:
     """Push every workspace item into Linear as a new issue under the
     caller's configured team. Same partial-failure shape as the Notion
-    export — a per-row error doesn't abort the run."""
+    export - a per-row error doesn't abort the run."""
     api_key = current_user.linear_api_key
     team_id = current_user.linear_team_id
     if not api_key or not team_id:

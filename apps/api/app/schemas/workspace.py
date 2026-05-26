@@ -26,7 +26,7 @@ class UserRead(BaseModel):
 class WorkspaceCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=120)
     framework: Framework = DEFAULT_FRAMEWORK
-    # `owner_email` is intentionally absent — the owner is derived from
+    # `owner_email` is intentionally absent - the owner is derived from
     # the authenticated session (or the dev user under AUTH_DISABLED=1).
     # Self-host contributors don't need to track emails manually.
 

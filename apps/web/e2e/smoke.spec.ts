@@ -34,7 +34,7 @@ test("user can create a workspace and see it in the list", async ({ page }) => {
   // Modal fields use proper <label htmlFor> so getByLabel matches the input.
   await page.getByLabel("Name").fill("Smoke Test Workspace");
 
-  // exact: true — otherwise "Create" matches the two "Create workspace"
+  // exact: true - otherwise "Create" matches the two "Create workspace"
   // CTAs (header + empty state) and Playwright's strict mode fails.
   await page.getByRole("button", { name: "Create", exact: true }).click();
 
@@ -208,7 +208,7 @@ async function scoreRowInline(
   await numericInputs.nth(1).fill(String(rice.confidence));
   await numericInputs.nth(2).fill(String(rice.effort));
 
-  // Impact dropdown — the trigger button shows the current value (defaults
+  // Impact dropdown - the trigger button shows the current value (defaults
   // to "1"). Skip the dropdown interaction when the desired impact is 1.
   if (rice.impact !== 1) {
     await row.getByRole("button", { name: "1", exact: true }).click();

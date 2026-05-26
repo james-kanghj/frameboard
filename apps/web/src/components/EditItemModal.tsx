@@ -125,7 +125,7 @@ export function EditItemModal({ item, onClose, onSaved, onError }: Props) {
     }
 
     if (promises.length === 0) {
-      // Nothing to save — treat the click as a Cancel.
+      // Nothing to save - treat the click as a Cancel.
       onClose();
       return;
     }
@@ -304,13 +304,13 @@ export function EditItemModal({ item, onClose, onSaved, onError }: Props) {
               Score
             </span>
             <span className="text-lg font-semibold tabular-nums text-slate-900">
-              {liveScore !== null ? liveScore.toFixed(2) : "—"}
+              {liveScore !== null ? liveScore.toFixed(2) : "-"}
             </span>
           </div>
 
           {ricePartial && (
             <p className="text-xs text-amber-700">
-              Fill in all of Reach, Confidence, and Effort to score this item —
+              Fill in all of Reach, Confidence, and Effort to score this item -
               or clear them all to save only Title/Description changes.
             </p>
           )}

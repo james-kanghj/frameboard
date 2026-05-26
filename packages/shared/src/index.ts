@@ -67,7 +67,7 @@ export interface UpdateWorkspaceInput {
 
 export interface CreateWorkspaceInput {
   name: string;
-  // Optional — the backend defaults to RICE. Pass when creating a
+  // Optional - the backend defaults to RICE. Pass when creating a
   // workspace for a non-default framework.
   framework?: Framework;
 }
@@ -90,7 +90,7 @@ export interface ScoreRequestInput {
 }
 
 // Mirrors backend UserMeRead. The raw access token is intentionally
-// absent — the API only returns whether one is configured.
+// absent - the API only returns whether one is configured.
 export interface UserMe {
   id: string;
   email: string;
@@ -149,7 +149,7 @@ export interface CreateItemInput {
 export interface UpdateItemInput {
   title?: string;
   description?: string | null;
-  // `null` is not allowed here — backend treats undefined as "leave alone"
+  // `null` is not allowed here - backend treats undefined as "leave alone"
   // and an empty array `[]` as "clear all tags".
   tags?: string[];
   // Omitted → leave alone. `null` → mark item as open (clear

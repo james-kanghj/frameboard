@@ -62,7 +62,7 @@ def score_rice(
     current_user: CurrentUser,
     db: Session = Depends(get_db),
 ) -> PrioritizationResult:
-    """RICE-specific endpoint. Writes the caller's own score row —
+    """RICE-specific endpoint. Writes the caller's own score row -
     multiple members can each score the same item without colliding."""
     _load_owned_item(db, item_id=payload.item_id, current_user_id=current_user.id)
     rice = rice_crud.upsert_rice_score(

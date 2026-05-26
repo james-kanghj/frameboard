@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     # Self-host / dev escape hatch. When set to "1" or "true", the
     # backend skips JWT verification and treats every request as the
-    # `dev_user_email` user — useful for local development, tests, and
+    # `dev_user_email` user - useful for local development, tests, and
     # contributors who haven't set up OAuth yet. Production / public
     # deployments must leave this unset (or "0") so requests without a
     # valid session JWT are rejected.

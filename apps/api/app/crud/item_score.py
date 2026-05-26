@@ -44,7 +44,7 @@ def upsert_score(
     score: float,
 ) -> ItemScore:
     """Per-user, per-framework upsert. Unique on (item_id, framework,
-    user_id) — each member can keep an independent score per
+    user_id) - each member can keep an independent score per
     framework on the same item."""
     existing = get_score(
         db, item_id=item_id, framework=framework, user_id=user_id

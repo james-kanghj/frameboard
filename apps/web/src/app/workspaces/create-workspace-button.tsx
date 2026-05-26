@@ -43,7 +43,7 @@ export function CreateWorkspaceButton() {
 // Custom listbox-style framework picker. Button trigger that shows the
 // active label + formula; click reveals a panel of all four options.
 // Keyboard support: ArrowUp/Down to move, Enter/Space to select, Escape
-// to close. No portal needed — the panel lives inside the modal so the
+// to close. No portal needed - the panel lives inside the modal so the
 // modal's stacking context already lifts it above page content.
 function FrameworkSelect({
   value,

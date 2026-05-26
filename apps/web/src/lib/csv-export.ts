@@ -27,7 +27,7 @@ function row(cells: unknown[]): string {
   return cells.map(escapeCell).join(",");
 }
 
-// Resolve a single item's "score inputs" — which columns appear
+// Resolve a single item's "score inputs" - which columns appear
 // depends on the workspace's framework. Falls back to empty strings
 // for items that haven't been scored yet.
 function scoreCellsFor(item: BacklogItem, framework: Framework): {
@@ -97,7 +97,7 @@ export function itemsToCSV(
   return "﻿" + lines.join("\n");
 }
 
-// Slugify the workspace name into something filename-safe — replaces
+// Slugify the workspace name into something filename-safe - replaces
 // runs of non-alphanumerics with hyphens, trims trailing hyphens, and
 // lowercases. Empty fallback uses "workspace" so files don't end up
 // named just "-2026-05-26.csv".
@@ -124,7 +124,7 @@ export function downloadCSV(
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  // Release the blob URL on the next tick — Safari occasionally needs
+  // Release the blob URL on the next tick - Safari occasionally needs
   // the URL alive past the synchronous click() handler.
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

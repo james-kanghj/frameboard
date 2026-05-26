@@ -16,7 +16,7 @@ export default async function SignInPage({ searchParams }: Props) {
   const callbackUrl = params.callbackUrl ?? "/workspaces";
 
   // Already signed in? Just bounce. A stale / wrong-secret cookie can
-  // make Auth.js throw `JWTSessionError` instead of returning null —
+  // make Auth.js throw `JWTSessionError` instead of returning null -
   // catch and treat as "not signed in" so the page still renders and
   // the user can re-authenticate.
   let session = null;

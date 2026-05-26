@@ -1,4 +1,4 @@
-// Edge runtime so the page can share the root layout — which calls
+// Edge runtime so the page can share the root layout - which calls
 // `auth()` server-side via UserBadge. Cloudflare Pages rejects the
 // build otherwise.
 export const runtime = "edge";
@@ -15,7 +15,7 @@ export default function HomePage() {
         <h1 className="text-5xl font-bold tracking-tight">Frameboard</h1>
         <p className="text-xl text-slate-600">
           An open-source workspace for product teams to run RICE, ICE, MoSCoW,
-          and Kano prioritization — without leaving the browser.
+          and Kano prioritization - without leaving the browser.
         </p>
         <div className="flex flex-wrap gap-3 pt-4">
           <Link

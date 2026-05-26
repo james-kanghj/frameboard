@@ -84,7 +84,7 @@ def create_item(
     workspace: Workspace = Depends(require_workspace_member),
     db: Session = Depends(get_db),
 ) -> BacklogItemRead:
-    # Any member can add items — shared workspace = shared backlog.
+    # Any member can add items - shared workspace = shared backlog.
     return item_crud.create_item(
         db,
         workspace_id=workspace.id,

@@ -21,7 +21,7 @@ export default defineConfig({
     },
   ],
   // Playwright owns the frontend dev server. The backend (uvicorn) is the
-  // runner's responsibility — start it externally with FRAMEBOARD_TEST_MODE=1
+  // runner's responsibility - start it externally with FRAMEBOARD_TEST_MODE=1
   // before running these tests. CI does this in the workflow job.
   webServer: {
     command: "pnpm dev",

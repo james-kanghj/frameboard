@@ -9,7 +9,7 @@
    - **Repository name**: `frameboard`
    - **Description**: `An open-source workspace for product teams to run RICE, ICE, MoSCoW, and Kano prioritization.`
    - **Visibility**: **Public** ✅ (Claude OSS 심사 필수 조건)
-   - **Initialize this repository** — 전부 체크 해제 (이미 로컬에 파일 있음)
+   - **Initialize this repository** - 전부 체크 해제 (이미 로컬에 파일 있음)
 3. Create repository
 
 ## 2. 로컬 → GitHub 푸시
@@ -70,14 +70,14 @@ GitHub 레포 페이지에서:
 ## 4. 첫 릴리즈 태그
 
 ```bash
-git tag -a v0.1.0 -m "v0.1.0 — Initial scaffolding"
+git tag -a v0.1.0 -m "v0.1.0 - Initial scaffolding"
 git push origin v0.1.0
 ```
 
 그 다음 GitHub UI에서 Releases → Create release from tag → 노트 작성:
 
 ```
-## v0.1.0 — Initial scaffolding
+## v0.1.0 - Initial scaffolding
 
 First public release. Sets up the monorepo, basic scoring API, and contributor docs.
 
@@ -102,19 +102,19 @@ First public release. Sets up the monorepo, basic scoring API, and contributor d
 4. Visibility: Public
 
 ### 컬럼 구성 (제안)
-- **📥 Inbox** — 새로 들어온 아이디어
-- **🔍 Discovery** — 더 알아봐야 함
-- **📐 Spec** — 작성 중인 스펙
-- **🛠 In Progress** — 개발 중
-- **🧪 In Review** — PR 또는 QA
-- **✅ Done** — 머지/릴리즈됨
+- **📥 Inbox** - 새로 들어온 아이디어
+- **🔍 Discovery** - 더 알아봐야 함
+- **📐 Spec** - 작성 중인 스펙
+- **🛠 In Progress** - 개발 중
+- **🧪 In Review** - PR 또는 QA
+- **✅ Done** - 머지/릴리즈됨
 
 ### 초기 이슈 (Projects에 자동 추가)
 
 다음 이슈를 만들고 보드에 추가하세요. 모두 영문으로:
 
 ```
-1. [Feature] Backlog UI — list, create, edit items
+1. [Feature] Backlog UI - list, create, edit items
 2. [Feature] RICE scoring board with drag-to-reorder
 3. [Feature] ICE scoring board
 4. [Feature] Collaborative scoring (multi-user with disagreement viz)

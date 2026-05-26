@@ -49,4 +49,4 @@ class WorkspaceMember(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    user: Mapped["User"] = relationship()  # noqa: F821
+    user: Mapped[User] = relationship()  # noqa: F821

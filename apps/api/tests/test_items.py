@@ -32,7 +32,7 @@ def test_create_item(client, workspace_id):
 
 def test_create_item_with_tags_normalises(client, workspace_id):
     """Tags are trimmed, deduped (case-insensitive), blanks dropped,
-    and over-long entries skipped — backend is the source of truth."""
+    and over-long entries skipped - backend is the source of truth."""
     response = client.post(
         f"/v1/workspaces/{workspace_id}/items",
         json={
@@ -230,7 +230,7 @@ def test_unmark_item_with_explicit_null(client, workspace_id):
 
 def test_completed_items_sink_to_bottom_of_board(client, workspace_id):
     """Board ordering: completed items follow open ones, regardless of
-    score. Two items scored, then the higher-scored one is completed —
+    score. Two items scored, then the higher-scored one is completed -
     it should drop below the lower-scored open one."""
     high = client.post(
         f"/v1/workspaces/{workspace_id}/items", json={"title": "High score"}
@@ -279,7 +279,7 @@ def test_completed_items_sink_to_bottom_of_board(client, workspace_id):
 
 def test_completion_change_recorded_in_history(client, workspace_id):
     """Mark + unmark events show up in item history under the
-    `fields` kind — no special history hook needed because
+    `fields` kind - no special history hook needed because
     `record_fields_change` already captures any tracked field that
     transitions."""
     create = client.post(

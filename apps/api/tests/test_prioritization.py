@@ -106,7 +106,7 @@ def test_rice_score_upserts_not_duplicates(client, db_session, item_id):
 
 def test_score_bumps_parent_item_updated_at(client, db_session, workspace_id):
     """Scoring an item must touch BacklogItem.updated_at, not just
-    RICEScore.updated_at — otherwise a future 'recently modified items'
+    RICEScore.updated_at - otherwise a future 'recently modified items'
     view would miss score-only changes."""
     create = client.post(
         f"/v1/workspaces/{workspace_id}/items", json={"title": "Scorable"}
@@ -142,7 +142,7 @@ def test_score_bumps_parent_item_updated_at(client, db_session, workspace_id):
 
 
 def test_delete_rice_also_touches_parent_item(client, db_session, workspace_id, item_id):
-    """Removing a score is also a state change — touch updated_at on the
+    """Removing a score is also a state change - touch updated_at on the
     parent so activity-sorted views stay accurate."""
     # Establish a score first.
     client.post(

@@ -3,7 +3,7 @@
 // NextAuth v5 (Auth.js) configuration. Session strategy is JWT; the
 // cookie is signed with HS256 using NEXTAUTH_SECRET so the FastAPI
 // backend can verify the same token via PyJWT (`Authorization: Bearer
-// <token>`). GitHub is the only provider for now — Google can be
+// <token>`). GitHub is the only provider for now - Google can be
 // added by appending to the providers array.
 //
 // AUTH_DISABLED bypass: when NEXT_PUBLIC_AUTH_DISABLED=1 the
@@ -21,7 +21,7 @@ function secretKey(): Uint8Array {
   const raw = process.env.NEXTAUTH_SECRET;
   if (!raw) {
     throw new Error(
-      "NEXTAUTH_SECRET is not set — required for session JWT signing",
+      "NEXTAUTH_SECRET is not set - required for session JWT signing",
     );
   }
   return encoder.encode(raw);
@@ -47,7 +47,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   pages: { signIn: "/auth/signin" },
   // Override NextAuth's default JWE encoding so the cookie is a plain
-  // HS256 JWT — that's what PyJWT on the backend expects. The same
+  // HS256 JWT - that's what PyJWT on the backend expects. The same
   // function decodes incoming requests, so middleware + auth() both
   // continue to work.
   jwt: {
@@ -86,7 +86,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     // Auth.js logs JWTSessionError to console BEFORE throwing. A user
     // landing with a cookie signed by a previous NEXTAUTH_SECRET (or
     // NextAuth's default JWE before the HS256 swap) is an expected,
-    // self-healing condition — we already catch the throw at the
+    // self-healing condition - we already catch the throw at the
     // `auth()` callsites. Suppress the noisy console.error so it
     // doesn't trigger the dev overlay; keep real errors visible.
     error(error) {

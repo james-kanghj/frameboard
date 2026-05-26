@@ -1,7 +1,7 @@
 # /apps/api/app/api/test_utils.py
 
 """Test-only endpoints. The router is conditionally registered in main.py
-only when FRAMEBOARD_TEST_MODE=1 — in production it is not mounted at all,
+only when FRAMEBOARD_TEST_MODE=1 - in production it is not mounted at all,
 so these routes return 404. Defensive against accidental data loss."""
 
 from __future__ import annotations

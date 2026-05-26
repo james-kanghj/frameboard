@@ -24,7 +24,7 @@ def _load_owned_item(
     """Loads an item and asserts the current user is a member of its
     parent workspace. Owner-id short-circuits the membership lookup so
     the single-owner happy path stays one query. 404 (rather than 403)
-    when the item doesn't exist or isn't accessible to this user —
+    when the item doesn't exist or isn't accessible to this user -
     same leak-prevention pattern used by require_workspace_owner."""
     item = item_crud.get_item(db, item_id)
     if item is None:

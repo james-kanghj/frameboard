@@ -1,9 +1,9 @@
 # /apps/api/tests/test_auth.py
 #
 # Auth tests cover two surfaces:
-# 1. The AUTH_DISABLED=1 dev path with X-Dev-User identity scoping —
+# 1. The AUTH_DISABLED=1 dev path with X-Dev-User identity scoping -
 #    exercises ownership isolation between simulated users.
-# 2. The JWT verification path — flips settings.auth_disabled OFF for
+# 2. The JWT verification path - flips settings.auth_disabled OFF for
 #    one test so we can validate the production header parsing without
 #    a separate test process.
 
@@ -48,7 +48,7 @@ def test_workspace_invisible_to_other_dev_user(client, client_as):
         list_resp = bob.get("/v1/workspaces")
         get_resp = bob.get(f"/v1/workspaces/{ws['id']}")
     assert list_resp.json() == []
-    # 404 (not 403) — don't leak existence to non-owners.
+    # 404 (not 403) - don't leak existence to non-owners.
     assert get_resp.status_code == 404
 
 
@@ -107,7 +107,7 @@ def test_cannot_read_history_of_other_users_item(client, client_as):
 
 def test_x_dev_user_header_creates_user_on_first_request(client, client_as):
     """A brand-new email materialises a User row the first time it's
-    used — the dev path mirrors the OAuth/JWT path's get-or-create
+    used - the dev path mirrors the OAuth/JWT path's get-or-create
     behaviour, so contributors don't have to pre-seed identities."""
     with client_as(client, "fresh@example.com") as fresh:
         ws = fresh.post("/v1/workspaces", json={"name": "Hello"})
@@ -169,7 +169,7 @@ def test_jwt_email_is_used_as_user_identity(client, auth_enabled):
 
 
 def test_jwt_without_email_claim_returns_401(client, auth_enabled):
-    """A JWT with the right signature but no `email` claim is rejected —
+    """A JWT with the right signature but no `email` claim is rejected -
     the email is the identity we key on."""
     payload = {
         "name": "Anon",

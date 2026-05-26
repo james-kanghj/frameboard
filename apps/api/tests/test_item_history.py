@@ -28,7 +28,7 @@ def _history(client, item_id: str) -> list[dict]:
 
 
 def test_history_empty_on_new_item(client, item):
-    """Just creating an item doesn't write history — there's nothing
+    """Just creating an item doesn't write history - there's nothing
     to diff against. First scoring or first field change starts the log."""
     assert _history(client, item["id"]) == []
 
@@ -82,7 +82,7 @@ def test_score_update_records_before_and_after(client, item):
 
 def test_score_resave_with_identical_values_writes_no_history(client, item):
     """A PATCH that re-saves the same RICE numbers shouldn't pollute the
-    log — `record_score_change` short-circuits when nothing changed."""
+    log - `record_score_change` short-circuits when nothing changed."""
     payload = {
         "item_id": item["id"],
         "reach": 1000,
@@ -130,7 +130,7 @@ def test_field_change_records_only_diff_keys(client, item):
     assert len(entries) == 1
     entry = entries[0]
     assert entry["kind"] == "fields"
-    # Only `title` changed — description should not appear in the diff.
+    # Only `title` changed - description should not appear in the diff.
     assert set(entry["before"].keys()) == {"title"}
     assert entry["before"]["title"] == "Trackable"
     assert entry["after"]["title"] == "Renamed"

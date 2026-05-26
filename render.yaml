@@ -5,8 +5,8 @@
 # and redeploys this service automatically.
 #
 # Required env vars to set in the Render dashboard before first deploy:
-#   DATABASE_URL       — Neon connection string (postgresql+psycopg://...)
-#   API_CORS_ORIGINS   — comma-separated frontend origins
+#   DATABASE_URL       - Neon connection string (postgresql+psycopg://...)
+#   API_CORS_ORIGINS   - comma-separated frontend origins
 #                        (e.g. "https://frameboard.vercel.app")
 
 services:
@@ -17,7 +17,7 @@ services:
     plan: free
     rootDir: apps/api
     # Install production deps, then run any pending migrations. Alembic is
-    # idempotent — re-running when already at head is a no-op, so it's safe
+    # idempotent - re-running when already at head is a no-op, so it's safe
     # to put here rather than in a separate release step (which the free
     # plan doesn't fully support).
     buildCommand: pip install -r requirements.txt && alembic upgrade head

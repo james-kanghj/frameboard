@@ -2,7 +2,7 @@
 #
 # Per-framework input schemas + a discriminated-union envelope. The
 # router pulls `framework` first, then dispatches the inputs body
-# through the right validator — invalid combinations (e.g. RICE with
+# through the right validator - invalid combinations (e.g. RICE with
 # effort=0) fail at the API boundary, not inside the engine.
 
 from __future__ import annotations

@@ -37,7 +37,7 @@ class MemberInvite(BaseModel):
     role: str = Field(default="scorer", pattern="^(owner|scorer)$")
 
 
-def _to_read(m) -> MemberRead:  # noqa: ANN001 — ORM row
+def _to_read(m) -> MemberRead:  # noqa: ANN001 - ORM row
     return MemberRead(
         id=m.id,
         user_id=m.user_id,
@@ -53,7 +53,7 @@ def list_members(
     workspace: Workspace = Depends(require_workspace_owner),
     db: Session = Depends(get_db),
 ) -> list[MemberRead]:
-    """List every member of the workspace. Owner-only for now — the
+    """List every member of the workspace. Owner-only for now - the
     member list doubles as an admin view, and surface contact emails to
     every scorer feels surprising. We can relax later if needed."""
     members = member_crud.list_members(db, workspace_id=workspace.id)
@@ -71,12 +71,12 @@ def invite_member(
     db: Session = Depends(get_db),
 ) -> MemberRead:
     """Invite a user by email. The User row is created on the fly if
-    the email isn't in our system yet — the invitee can later sign in
+    the email isn't in our system yet - the invitee can later sign in
     via GitHub and the OAuth flow links to the same row by email.
 
     The current owner can be 're-invited' as a scorer (it's idempotent
     and the existing role wins), but elevating an existing scorer to
-    owner is intentionally a no-op too — the primary owner concept is
+    owner is intentionally a no-op too - the primary owner concept is
     stored on workspaces.owner_id, not on members.role."""
     member = member_crud.add_member_by_email(
         db,
@@ -100,7 +100,7 @@ def remove_member(
     db: Session = Depends(get_db),
 ) -> None:
     """Removes a member. The primary owner (the workspace's
-    `owner_id`) cannot be removed via this route — they have to
+    `owner_id`) cannot be removed via this route - they have to
     delete the whole workspace if they want to revoke their own
     access, since orphan workspaces aren't supported."""
     if user_id == workspace.owner_id:

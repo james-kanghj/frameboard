@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # Force the API into AUTH_DISABLED mode before anything imports the
-# settings singleton — pydantic-settings reads this at module-load time.
+# settings singleton - pydantic-settings reads this at module-load time.
 # Tests opt into multi-user scenarios via the X-Dev-User header (the
 # headers fixture below sets it for the implicit default user) so we
 # never need to mint real JWTs in unit tests.

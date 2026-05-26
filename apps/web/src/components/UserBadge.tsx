@@ -9,7 +9,7 @@ import { UserBadgeMenu } from "./UserBadgeMenu";
 
 export async function UserBadge() {
   // A stale or wrong-secret cookie can make Auth.js throw inside auth().
-  // Treat any decode failure as "no session" — the badge just disappears
+  // Treat any decode failure as "no session" - the badge just disappears
   // and the user can re-sign-in.
   let session = null;
   try {

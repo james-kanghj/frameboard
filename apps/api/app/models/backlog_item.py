@@ -22,7 +22,7 @@ class BacklogItem(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     # Free-form labels. Stored as a JSON array so we get the same shape
     # in Postgres (jsonb) and SQLite (TEXT). Application-side normalisation
-    # (trim, dedupe, max 10, max 30 chars) lives in the Pydantic schema —
+    # (trim, dedupe, max 10, max 30 chars) lives in the Pydantic schema -
     # validation is enforced at the API boundary, not the column type.
     tags: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(

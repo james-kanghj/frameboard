@@ -43,7 +43,7 @@ def upsert_rice_score(
     confidence: float,
     effort: float,
 ) -> RICEScore:
-    """Per-user upsert. The (item_id, user_id) pair is unique — two
+    """Per-user upsert. The (item_id, user_id) pair is unique - two
     different users can have side-by-side scores for the same item."""
     score_value = RICEScore.compute(
         reach=reach, impact=impact, confidence=confidence, effort=effort
@@ -139,7 +139,7 @@ def list_all_scores_for_workspace(
 def aggregate(scores: Iterable[RICEScore]) -> dict | None:
     """Mean + variance + contributor count over the provided per-user
     score rows. Returns None when no rows are passed (caller renders
-    "—" instead of "0.00")."""
+    "-" instead of "0.00")."""
     rows = list(scores)
     if not rows:
         return None
@@ -156,7 +156,7 @@ def aggregate(scores: Iterable[RICEScore]) -> dict | None:
 
 def list_board(db: Session, *, workspace_id: UUID) -> list[BacklogItem]:
     """Workspace items pre-loaded for the framework=RICE board.
-    Eager-loads RICEScore via the relationship — the router then
+    Eager-loads RICEScore via the relationship - the router then
     overlays per-user + aggregate views from the dedicated CRUD
     helpers above."""
     stmt = (

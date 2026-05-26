@@ -37,7 +37,7 @@ export function UserBadgeMenu({ name, email, image }: Props) {
     };
   }, [open]);
 
-  // Initials fallback when there's no avatar image — first letter of
+  // Initials fallback when there's no avatar image - first letter of
   // the display name (or email's local part) uppercased.
   const initial = (name || email).trim().charAt(0).toUpperCase() || "·";
 

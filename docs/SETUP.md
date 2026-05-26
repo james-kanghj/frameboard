@@ -126,14 +126,14 @@ alembic revision --autogenerate -m "add foo column" --rev-id 0002_add_foo
 Notes:
 
 - Pass `--rev-id` to keep filenames sequential (`0002_…`, `0003_…`). Without it, Alembic uses a random hex slug.
-- **Always review the generated file** before committing — autogenerate misses things like server-side defaults, custom types, and renames. Hand-edit as needed.
+- **Always review the generated file** before committing - autogenerate misses things like server-side defaults, custom types, and renames. Hand-edit as needed.
 - To roll back one step locally: `alembic downgrade -1`.
 
 ## 6. Run
 
 The cleanest local setup uses two terminals.
 
-**Terminal A — backend:**
+**Terminal A - backend:**
 
 ```bash
 cd apps/api && source .venv/bin/activate
@@ -142,7 +142,7 @@ uvicorn app.main:app --reload --port 8001
 
 The API is at [http://localhost:8001](http://localhost:8001), and the interactive OpenAPI docs are at [http://localhost:8001/docs](http://localhost:8001/docs).
 
-**Terminal B — frontend:**
+**Terminal B - frontend:**
 
 ```bash
 pnpm --filter @frameboard/web dev
@@ -170,16 +170,16 @@ pytest -v
 
 A few issues that come up when setting this up cold:
 
-- **`pip install` fails on `project.authors[0].email`** — setuptools 80+ validates IDN-email strictly and rejects underscores in the local part. Use a different email (a `[email protected]` noreply works well), or remove the `email = "..."` field entirely from the `authors` line in `apps/api/pyproject.toml`.
+- **`pip install` fails on `project.authors[0].email`** - setuptools 80+ validates IDN-email strictly and rejects underscores in the local part. Use a different email (a `[email protected]` noreply works well), or remove the `email = "..."` field entirely from the `authors` line in `apps/api/pyproject.toml`.
 
-- **`alembic upgrade head` says `SyntaxError: invalid syntax` on a file under `app/`** — a Python file has an unprefixed path string as its first line. Convention: Python and YAML/TOML headers must start with `#`; CSS must use `/* ... */`; TS/JS uses `//`. JSON files have no header.
+- **`alembic upgrade head` says `SyntaxError: invalid syntax` on a file under `app/`** - a Python file has an unprefixed path string as its first line. Convention: Python and YAML/TOML headers must start with `#`; CSS must use `/* ... */`; TS/JS uses `//`. JSON files have no header.
 
-- **Postgres won't start: `port is already allocated`** — something else is on `5432` (often Homebrew Postgres). Change the host port in `docker-compose.yml` to `"5433:5432"` and update `DATABASE_URL` in `apps/api/.env.local`.
+- **Postgres won't start: `port is already allocated`** - something else is on `5432` (often Homebrew Postgres). Change the host port in `docker-compose.yml` to `"5433:5432"` and update `DATABASE_URL` in `apps/api/.env.local`.
 
-- **Frontend can't reach backend (CORS or connection refused)** — verify that `NEXT_PUBLIC_API_BASE_URL` in `apps/web/.env.development.local` matches the port your `uvicorn` is running on, and that the backend's `API_CORS_ORIGINS` (in `apps/api/.env.local`) includes `http://localhost:3000`.
+- **Frontend can't reach backend (CORS or connection refused)** - verify that `NEXT_PUBLIC_API_BASE_URL` in `apps/web/.env.development.local` matches the port your `uvicorn` is running on, and that the backend's `API_CORS_ORIGINS` (in `apps/api/.env.local`) includes `http://localhost:3000`.
 
-- **`pnpm dev` fails with `EADDRINUSE :::3000`** — a previous Next.js process is still running. Kill it: `lsof -ti :3000 | xargs kill -9`.
+- **`pnpm dev` fails with `EADDRINUSE :::3000`** - a previous Next.js process is still running. Kill it: `lsof -ti :3000 | xargs kill -9`.
 
-- **`pnpm install` refuses to run, saying the project requires a specific pnpm version** — the `packageManager` field in the root `package.json` is pinned. Either match that version locally, or bump the pin to match what you have (`pnpm --version`).
+- **`pnpm install` refuses to run, saying the project requires a specific pnpm version** - the `packageManager` field in the root `package.json` is pinned. Either match that version locally, or bump the pin to match what you have (`pnpm --version`).
 
-- **`Cannot find module './XX.js'` or infinite loading after running a production build alongside dev** — Next.js's dev server and production build write incompatible chunk IDs to the same `apps/web/.next` directory. If you've run `next build` for any reason (verification, CI debug, etc.), clear the cache and restart the dev server: `rm -rf apps/web/.next && pnpm --filter @frameboard/web dev`.
+- **`Cannot find module './XX.js'` or infinite loading after running a production build alongside dev** - Next.js's dev server and production build write incompatible chunk IDs to the same `apps/web/.next` directory. If you've run `next build` for any reason (verification, CI debug, etc.), clear the cache and restart the dev server: `rm -rf apps/web/.next && pnpm --filter @frameboard/web dev`.

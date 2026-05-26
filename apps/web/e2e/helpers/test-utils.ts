@@ -67,7 +67,7 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 // Wipes all workspaces (cascade-deletes items + scores) for the given user
 // and ensures the user row exists. Requires the backend to be running with
-// FRAMEBOARD_TEST_MODE=1 — otherwise the /v1/_test/reset route is 404.
+// FRAMEBOARD_TEST_MODE=1 - otherwise the /v1/_test/reset route is 404.
 export async function resetBackend(ownerEmail: string): Promise<void> {
   const url = `${getApiBaseUrl()}/v1/_test/reset`;
   const response = await fetch(url, {

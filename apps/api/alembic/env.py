@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 # Importing the models package registers every model on Base.metadata so
 # `alembic revision --autogenerate` can detect schema changes. The F401
-# silence is intentional — the import is the side effect.
+# silence is intentional - the import is the side effect.
 from app import models  # noqa: E402, F401
 from app.core.config import settings  # noqa: E402
 from app.db.session import Base  # noqa: E402

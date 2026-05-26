@@ -23,7 +23,7 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     # Plain VARCHAR (not Postgres ENUM) for the same reason as
-    # item_history.kind — the framework set is expected to grow and
+    # item_history.kind - the framework set is expected to grow and
     # ALTERing a Postgres enum across deploys is more friction than
     # validating in Python is worth saving.
     op.add_column(

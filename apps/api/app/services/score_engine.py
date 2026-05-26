@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-# Numeric proxy values used to sort MoSCoW items on the board — higher
+# Numeric proxy values used to sort MoSCoW items on the board - higher
 # = higher priority. Not exposed to the UI; the UI displays the label.
 MOSCOW_RANKS: dict[str, int] = {
     "Must": 4,
@@ -23,7 +23,7 @@ MOSCOW_RANKS: dict[str, int] = {
 def compute(framework: str, inputs: dict[str, Any]) -> float:
     """Returns the numeric score for the given framework. Raises ValueError
     for unknown frameworks or invalid input combinations that slip past
-    schema validation (defensive — schemas should already have caught these)."""
+    schema validation (defensive - schemas should already have caught these)."""
     if framework == "RICE":
         reach = float(inputs["reach"])
         impact = float(inputs["impact"])
@@ -53,7 +53,7 @@ def compute(framework: str, inputs: dict[str, Any]) -> float:
             raise ValueError(
                 f"bucket must be one of {list(MOSCOW_RANKS)}, got {bucket!r}"
             )
-        # No formula — bucket maps to a numeric rank for sortability.
+        # No formula - bucket maps to a numeric rank for sortability.
         return float(MOSCOW_RANKS[bucket])
 
     raise ValueError(f"unknown framework: {framework!r}")

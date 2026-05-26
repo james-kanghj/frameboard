@@ -6,7 +6,7 @@ Revision ID: 0008_add_user_linear_integration
 Revises: 0007_add_user_notion_integration
 Create Date: 2026-05-26 03:00:00.000000
 
-Same shape as the Notion columns added in 0007 — one row per user,
+Same shape as the Notion columns added in 0007 - one row per user,
 nullable until the user configures the integration. Linear's personal
 API key is short-form (`lin_api_*`), and the team id is a UUID, so the
 column widths track those formats with a small buffer.

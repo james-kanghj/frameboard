@@ -23,14 +23,14 @@ class UserMeRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
-    # Plain `str` (not `EmailStr`) — email-validator rejects reserved
+    # Plain `str` (not `EmailStr`) - email-validator rejects reserved
     # TLDs like `.test` / `.local`, and this is a read-side response,
     # not a write-side validator. The address was already vetted when
     # it came through OAuth or got persisted upstream.
     email: str
     display_name: str
     created_at: datetime
-    # Don't echo back the token itself — only whether one is set, so
+    # Don't echo back the token itself - only whether one is set, so
     # the frontend can render "configured / not configured" without
     # ever holding the raw secret.
     notion_configured: bool = False
@@ -46,7 +46,7 @@ class UserMeUpdate(BaseModel):
     linear_team_id: str | None = Field(default=None, max_length=64)
 
 
-def _to_read(user) -> UserMeRead:  # noqa: ANN001 — ORM row
+def _to_read(user) -> UserMeRead:  # noqa: ANN001 - ORM row
     return UserMeRead(
         id=user.id,
         email=user.email,
@@ -70,7 +70,7 @@ def update_me(
     current_user: CurrentUser,
     db: Session = Depends(get_db),
 ) -> UserMeRead:
-    """Partial update — only the fields the caller sends are written.
+    """Partial update - only the fields the caller sends are written.
     Pass an empty string for a token field to clear it (disconnect)."""
     fields = payload.model_dump(exclude_unset=True)
     # Treat empty string as "disconnect" so the frontend can clear an

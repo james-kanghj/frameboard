@@ -2,7 +2,7 @@
 #
 # Notion export tests stub `create_page` so they don't reach out to
 # api.notion.com. The endpoint-level behaviour (auth gating,
-# success/failure tallying, ownership) is what we're verifying — the
+# success/failure tallying, ownership) is what we're verifying - the
 # wire format with Notion is exercised manually + via the production
 # smoke test.
 

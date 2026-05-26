@@ -30,7 +30,7 @@ export function MembersMenu({ workspaceId, workspaceOwnerId }: Props) {
         if (!cancelled) setMembers(m);
       })
       .catch(() => {
-        // Quietly fail — the button just shows "Members" without a
+        // Quietly fail - the button just shows "Members" without a
         // count, and the modal will surface the error if the user
         // opens it.
       });
@@ -133,7 +133,7 @@ function MembersModal({
     setError(null);
     try {
       const created = await inviteMember(workspaceId, { email: trimmed });
-      // Merge — if it's an existing member the response IDs match and
+      // Merge - if it's an existing member the response IDs match and
       // the list de-dupes. Otherwise it's appended.
       setMembers((curr) => {
         if (!curr) return [created];

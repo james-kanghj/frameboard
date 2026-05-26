@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Frameboard API",
     version="0.1.0",
-    description="Backend API for Frameboard — prioritization workspace for product teams.",
+    description="Backend API for Frameboard - prioritization workspace for product teams.",
     lifespan=lifespan,
 )
 
@@ -46,7 +46,7 @@ app.include_router(users.router, prefix="/v1", tags=["users"])
 app.include_router(exports.router, prefix="/v1", tags=["exports"])
 app.include_router(members.router, prefix="/v1", tags=["members"])
 
-# Test-only routes — gated behind an env var so they can never be mounted
+# Test-only routes - gated behind an env var so they can never be mounted
 # accidentally in production. The e2e suite sets FRAMEBOARD_TEST_MODE=1
 # when starting uvicorn; otherwise the /v1/_test/* routes return 404.
 if os.environ.get("FRAMEBOARD_TEST_MODE") == "1":

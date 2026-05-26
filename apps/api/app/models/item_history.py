@@ -39,8 +39,8 @@ class ItemHistory(Base):
         default=lambda: datetime.now(UTC),
         nullable=False,
     )
-    # "score" — RICE values changed (before/after carry reach/impact/...).
-    # "fields" — item title/description/tags changed (only changed keys are
+    # "score" - RICE values changed (before/after carry reach/impact/...).
+    # "fields" - item title/description/tags changed (only changed keys are
     # included in before/after).
     kind: Mapped[str] = mapped_column(String(20), nullable=False)
     before: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)

@@ -23,7 +23,7 @@ class User(Base):
     notion_database_id: Mapped[str | None] = mapped_column(
         String(64), nullable=True
     )
-    # Same shape as the Notion fields above — `lin_api_*` personal
+    # Same shape as the Notion fields above - `lin_api_*` personal
     # API key + target team UUID. Both null until the user configures.
     linear_api_key: Mapped[str | None] = mapped_column(
         String(255), nullable=True

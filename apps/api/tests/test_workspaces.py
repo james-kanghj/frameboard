@@ -128,7 +128,7 @@ def test_create_workspace_rejects_blank_name(client):
 
 
 def test_list_workspaces_returns_only_current_users_workspaces(client, client_as):
-    """Listing is scoped to the authenticated user — alice's workspace
+    """Listing is scoped to the authenticated user - alice's workspace
     must not appear when bob is making the request."""
     with client_as(client, "alice@example.com") as alice:
         alice.post("/v1/workspaces", json={"name": "Alice WS"})
@@ -160,7 +160,7 @@ def test_list_workspaces_empty_for_user_with_none(client, client_as):
 
 
 def test_get_workspace_returns_metadata_only(client):
-    """GET /v1/workspaces/{id} returns workspace metadata only — items live
+    """GET /v1/workspaces/{id} returns workspace metadata only - items live
     on /board (where they get the proper score-based ordering). Returning
     items here would mean two separate fetches load the same data when the
     frontend wants the sorted board view."""

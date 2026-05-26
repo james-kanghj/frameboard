@@ -15,7 +15,7 @@ from app.db.session import Base
 
 class ItemScore(Base):
     """Polymorphic per-framework score for a backlog item. Sits alongside
-    the legacy RICEScore table — non-RICE frameworks write here. RICE is
+    the legacy RICEScore table - non-RICE frameworks write here. RICE is
     still served from `rice_scores` until a future migration unifies the
     two stores."""
 
