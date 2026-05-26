@@ -74,7 +74,7 @@ Alpha, built in the open. **Live and deployed** at [frameboard.pages.dev](https:
 | Layer | Status |
 |---|---|
 | Database schema | ✅ Users, workspaces, items (with completion), RICE scores, polymorphic `item_scores`, history log |
-| Backend API | ✅ Full CRUD + RICE/ICE/MoSCoW/ValueEffort scoring + item tags + completion + history log (101 pytest tests) |
+| Backend API | ✅ Full CRUD + RICE/ICE/MoSCoW/ValueEffort scoring + item tags + completion + history log + Notion export (110 pytest tests) |
 | Frontend workspace list + board | ✅ Create (with framework picker), score, edit (modal + inline for RICE), delete, tag, complete |
 | Multi-framework scoring | ✅ Backend (`POST /v1/score`, `workspace.framework`, polymorphic `item_scores`) and frontend both shipped. Custom framework dropdown on the create modal; ICE / MoSCoW / Value × Effort each render a dedicated polymorphic board with framework-aware inputs, metric legend, (i) tooltips, and intro line |
 | Auth | ✅ GitHub OAuth via NextAuth.js + HS256 JWT verification on the backend. Floating user badge (avatar + email + Sign out) on every page. `AUTH_DISABLED=1` bypass for self-host / local dev |
@@ -170,7 +170,7 @@ on the JWT's `email` claim.
 | Backend  | FastAPI, Python 3.12+, SQLAlchemy 2.0, Alembic             |
 | Database | PostgreSQL 16 (Dockerized, port `5433` to avoid conflicts) |
 | Monorepo | pnpm workspaces + Turborepo                                |
-| Testing  | pytest (101 tests, backend), Playwright (5 e2e scenarios)  |
+| Testing  | pytest (110 tests, backend), Playwright (5 e2e scenarios)  |
 | Deploy   | Cloudflare Pages (frontend) + Render (backend) + Neon (DB) |
 | CI       | GitHub Actions — web, api, e2e jobs all gated on PRs       |
 
@@ -198,7 +198,7 @@ on the JWT's `email` claim.
 - [x] ICE / MoSCoW / Value-vs-Effort frameworks — backend: `workspace.framework`, polymorphic `item_scores` table, unified `POST /v1/score`, framework-aware board ordering. Frontend: custom framework picker on the create-workspace modal, dedicated polymorphic board for non-RICE workspaces with per-framework inputs (1–10 sliders for ICE, V/E numeric pair for Value × Effort, Must/Should/Could/Won't select for MoSCoW), framework-aware metric legend, (i) tooltips, and an intro line per board.
 - [x] Multi-user auth (NextAuth.js + JWT) — GitHub OAuth on the frontend, HS256 JWT verification on the backend with cross-user ownership checks on every endpoint. Floating user badge on every page (avatar + email + Sign out). `AUTH_DISABLED=1` bypass for self-host / local dev (mirrored on both sides).
 - [x] Item completion — nullable `completed_at` on `backlog_items` (migration 0006), checkbox column on every board, completed items strikethrough + sink to the bottom regardless of score. "Show completed" filter toggle (URL `?completed=show`) mixes them back in for retros. History log captures mark/unmark events automatically via the field-diff hook.
-- [~] CSV / Jira / Linear / Notion export — CSV export shipped: one-click download from any workspace board, headers adapt to the workspace's framework, UTF-8 BOM so Excel opens it cleanly. Jira / Linear / Notion integrations still TODO.
+- [~] CSV / Jira / Linear / Notion export — CSV (client-side, framework-aware columns) and Notion (server-side, integration-token + database id, per-user setup flow in the export menu, partial-success reporting) both shipped. Linear / Jira integrations still TODO.
 - [ ] Collaborative scoring with disagreement visualization
 
 See [GitHub Projects](https://github.com/james-kanghj/frameboard/projects) for the live board.

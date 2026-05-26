@@ -17,7 +17,8 @@ import { createPortal } from "react-dom";
 import type { BacklogItem, RICEImpact } from "@frameboard/shared";
 
 import { createItem, deleteItem, scoreRICE, updateItem } from "@/lib/api";
-import { downloadCSV, itemsToCSV } from "@/lib/csv-export";
+
+import { ExportMenu } from "@/components/ExportMenu";
 
 import { EditItemModal } from "@/components/EditItemModal";
 import { ImpactSelect } from "@/components/ImpactSelect";
@@ -217,19 +218,12 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => downloadCSV(workspaceName, itemsToCSV(items, "RICE"))}
-            disabled={items.length === 0}
-            className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-            title={
-              items.length === 0
-                ? "Add at least one item to export"
-                : "Download all items as a CSV file"
-            }
-          >
-            Export CSV
-          </button>
+          <ExportMenu
+            workspaceId={workspaceId}
+            workspaceName={workspaceName}
+            framework="RICE"
+            items={items}
+          />
           <button
             type="button"
             onClick={() => setAddOpen(true)}

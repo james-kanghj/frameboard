@@ -4,6 +4,7 @@ import type {
   BacklogItem,
   CreateItemInput,
   CreateWorkspaceInput,
+  ExportResult,
   Framework,
   ItemHistoryEntry,
   ScoreData,
@@ -12,6 +13,8 @@ import type {
   ScoreResult,
   UpdateItemInput,
   UpdateWorkspaceInput,
+  UserMe,
+  UserMeUpdateInput,
   Workspace,
 } from "@frameboard/shared";
 
@@ -281,4 +284,23 @@ export function deleteScore(
     method: "DELETE",
     query: { framework },
   });
+}
+
+// ---------- User settings ----------
+
+export function getMe(): Promise<UserMe> {
+  return request<UserMe>("/v1/users/me");
+}
+
+export function updateMe(input: UserMeUpdateInput): Promise<UserMe> {
+  return request<UserMe>("/v1/users/me", { method: "PATCH", body: input });
+}
+
+// ---------- Exports ----------
+
+export function exportToNotion(workspaceId: string): Promise<ExportResult> {
+  return request<ExportResult>(
+    `/v1/workspaces/${workspaceId}/export/notion`,
+    { method: "POST" },
+  );
 }

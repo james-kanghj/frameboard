@@ -75,6 +75,34 @@ export interface ScoreRequestInput {
   inputs: Record<string, unknown>;
 }
 
+// Mirrors backend UserMeRead. The raw access token is intentionally
+// absent — the API only returns whether one is configured.
+export interface UserMe {
+  id: string;
+  email: string;
+  displayName: string;
+  createdAt: string;
+  notionConfigured: boolean;
+  notionDatabaseId: string | null;
+}
+
+export interface UserMeUpdateInput {
+  // Empty string = disconnect, non-empty = set, omitted = leave alone.
+  notionAccessToken?: string;
+  notionDatabaseId?: string;
+}
+
+export interface ExportFailure {
+  title: string;
+  error: string;
+}
+
+export interface ExportResult {
+  created: number;
+  failed: number;
+  failures: ExportFailure[];
+}
+
 export interface CreateItemInput {
   title: string;
   description?: string | null;
