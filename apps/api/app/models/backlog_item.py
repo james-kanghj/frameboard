@@ -42,8 +42,11 @@ class BacklogItem(Base):
     )
 
     workspace: Mapped["Workspace"] = relationship(back_populates="items")  # noqa: F821
-    rice_score: Mapped["RICEScore | None"] = relationship(  # noqa: F821
+    # Plural after the Phase-B per-user split: one RICEScore row per
+    # (item, user) pair. The router projects this down to the caller's
+    # own row + an aggregate across the workspace; consumers shouldn't
+    # touch this relationship directly.
+    rice_scores: Mapped[list["RICEScore"]] = relationship(  # noqa: F821
         back_populates="item",
         cascade="all, delete-orphan",
-        uselist=False,
     )

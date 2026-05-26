@@ -21,7 +21,12 @@ class ItemScore(Base):
 
     __tablename__ = "item_scores"
     __table_args__ = (
-        UniqueConstraint("item_id", "framework", name="uq_item_scores_item_framework"),
+        UniqueConstraint(
+            "item_id",
+            "framework",
+            "user_id",
+            name="uq_item_scores_item_framework_user",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(
@@ -31,6 +36,12 @@ class ItemScore(Base):
         PGUUID(as_uuid=True),
         ForeignKey("backlog_items.id", ondelete="CASCADE"),
         nullable=False,
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     framework: Mapped[str] = mapped_column(String(20), nullable=False)
     inputs: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)

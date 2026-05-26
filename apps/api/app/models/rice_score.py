@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import DateTime, Float, ForeignKey, func
+from sqlalchemy import DateTime, Float, ForeignKey, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -10,13 +10,24 @@ from app.db.session import Base
 
 class RICEScore(Base):
     __tablename__ = "rice_scores"
+    __table_args__ = (
+        UniqueConstraint("item_id", "user_id", name="uq_rice_scores_item_user"),
+    )
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
     item_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("backlog_items.id", ondelete="CASCADE"),
         nullable=False,
-        unique=True,
+    )
+    # Per-user scoring: multiple workspace members can each store their
+    # own RICE inputs for the same item. The (item_id, user_id) pair is
+    # what's unique, not item_id alone.
+    user_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     reach: Mapped[float] = mapped_column(Float, nullable=False)
@@ -32,7 +43,7 @@ class RICEScore(Base):
         nullable=False,
     )
 
-    item: Mapped["BacklogItem"] = relationship(back_populates="rice_score")  # noqa: F821
+    item: Mapped["BacklogItem"] = relationship(back_populates="rice_scores")  # noqa: F821
 
     @staticmethod
     def compute(reach: float, impact: float, confidence: float, effort: float) -> float:

@@ -14,7 +14,11 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
-import type { BacklogItem, RICEImpact } from "@frameboard/shared";
+import type {
+  BacklogItem,
+  RICEImpact,
+  ScoreAggregate,
+} from "@frameboard/shared";
 
 import { createItem, deleteItem, scoreRICE, updateItem } from "@/lib/api";
 
@@ -1322,7 +1326,16 @@ function BoardRow({
           confidence={rs.confidence}
           effort={rs.effort}
           score={rs.score}
+          aggregate={item.riceAggregate ?? null}
           onChangeField={updateOneField}
+        />
+      ) : item.riceAggregate ? (
+        // Other members scored this item but the current user hasn't —
+        // surface the team aggregate alongside a "Score" button so the
+        // current user can join in.
+        <ScoredByOthersCells
+          aggregate={item.riceAggregate}
+          onStartScoring={() => setScoringOpen(true)}
         />
       ) : (
         <UnscoredCells onStartScoring={() => setScoringOpen(true)} />
@@ -1341,6 +1354,7 @@ function ScoredCells({
   confidence,
   effort,
   score,
+  aggregate,
   onChangeField,
 }: {
   reach: number;
@@ -1348,11 +1362,17 @@ function ScoredCells({
   confidence: number;
   effort: number;
   score: number;
+  aggregate: ScoreAggregate | null;
   onChangeField: (
     field: "reach" | "confidence" | "effort" | "impact",
     value: number,
   ) => void | Promise<void>;
 }) {
+  // The displayed primary score is the workspace-wide aggregate
+  // (team consensus). Falls back to the caller's own score when no
+  // aggregate is available (e.g. single-user workspace pre-Phase-B
+  // data, or transient state between scoring + refetch).
+  const display = aggregate?.score ?? score;
   return (
     <>
       <EditableNumberCell
@@ -1381,7 +1401,91 @@ function ScoredCells({
         onSave={(v) => onChangeField("effort", v)}
       />
       <td className="bg-slate-50/70 px-3 py-3 text-right font-semibold text-slate-900">
-        {score.toFixed(2)}
+        <ScoreDisplay value={display} aggregate={aggregate} mine={score} />
+      </td>
+    </>
+  );
+}
+
+// Renders the "team consensus" score with a small chip showing the
+// contributor count. When two or more members have scored AND their
+// scores differ, an extra row underneath shows the min–max spread so
+// disagreement is visible at a glance.
+function ScoreDisplay({
+  value,
+  aggregate,
+  mine,
+}: {
+  value: number;
+  aggregate: ScoreAggregate | null;
+  mine: number | null;
+}) {
+  const count = aggregate?.contributorCount ?? (mine != null ? 1 : 0);
+  const hasDisagreement =
+    aggregate != null &&
+    aggregate.contributorCount > 1 &&
+    aggregate.max !== aggregate.min;
+  return (
+    <span className="inline-flex flex-col items-end">
+      <span className="inline-flex items-baseline gap-1">
+        <span>{value.toFixed(2)}</span>
+        {count > 1 && (
+          <span
+            className="rounded-full bg-slate-200 px-1.5 text-[10px] font-medium tabular-nums text-slate-600"
+            title={`${count} members scored`}
+          >
+            {count}
+          </span>
+        )}
+      </span>
+      {hasDisagreement && (
+        <span
+          className="text-[10px] font-normal text-slate-500"
+          title="Range across members (min – max)"
+        >
+          {aggregate.min.toFixed(0)}–{aggregate.max.toFixed(0)}
+        </span>
+      )}
+      {mine != null && aggregate != null && aggregate.contributorCount > 1 && (
+        <span className="text-[10px] font-normal text-slate-400">
+          mine: {mine.toFixed(2)}
+        </span>
+      )}
+    </span>
+  );
+}
+
+// Other members have scored this item but the current user hasn't.
+// Renders the team aggregate read-only + a Score button so the user
+// can join the consensus.
+function ScoredByOthersCells({
+  aggregate,
+  onStartScoring,
+}: {
+  aggregate: ScoreAggregate;
+  onStartScoring: () => void;
+}) {
+  return (
+    <>
+      <td className="px-3 py-3 text-right text-slate-300">—</td>
+      <td className="px-3 py-3 text-slate-300">—</td>
+      <td className="px-3 py-3 text-right text-slate-300">—</td>
+      <td className="px-3 py-3 text-right text-slate-300">—</td>
+      <td className="bg-slate-50/70 px-3 py-2 text-right">
+        <div className="flex flex-col items-end gap-1">
+          <ScoreDisplay
+            value={aggregate.score}
+            aggregate={aggregate}
+            mine={null}
+          />
+          <button
+            type="button"
+            onClick={onStartScoring}
+            className="rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100"
+          >
+            + Your score
+          </button>
+        </div>
       </td>
     </>
   );
@@ -1888,8 +1992,14 @@ function sortByScore(items: BacklogItem[]): BacklogItem[] {
     const aDone = a.completedAt ? 1 : 0;
     const bDone = b.completedAt ? 1 : 0;
     if (aDone !== bDone) return aDone - bDone;
-    const aScore = a.riceScore?.score ?? null;
-    const bScore = b.riceScore?.score ?? null;
+    // Rank by the workspace-wide aggregate (mean across every member's
+    // score) so the board reflects team consensus, not the caller's
+    // personal scoring. Falls back to the caller's own score so a
+    // freshly seeded local workspace (no aggregate yet) still sorts.
+    const aScore =
+      a.riceAggregate?.score ?? a.riceScore?.score ?? null;
+    const bScore =
+      b.riceAggregate?.score ?? b.riceScore?.score ?? null;
     if (aScore !== null && bScore !== null) {
       if (bScore !== aScore) return bScore - aScore;
       return a.createdAt.localeCompare(b.createdAt);

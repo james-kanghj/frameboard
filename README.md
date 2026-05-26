@@ -74,7 +74,7 @@ Alpha, built in the open. **Live and deployed** at [frameboard.pages.dev](https:
 | Layer | Status |
 |---|---|
 | Database schema | ✅ Users, workspaces, items (with completion), RICE scores, polymorphic `item_scores`, history log |
-| Backend API | ✅ Full CRUD + RICE/ICE/MoSCoW/ValueEffort scoring + item tags + completion + history log + Notion/Linear export + workspace membership (124 pytest tests) |
+| Backend API | ✅ Full CRUD + per-user RICE/ICE/MoSCoW/ValueEffort scoring + item tags + completion + history log + Notion/Linear export + workspace membership + aggregate score endpoint (129 pytest tests) |
 | Frontend workspace list + board | ✅ Create (with framework picker), score, edit (modal + inline for RICE), delete, tag, complete |
 | Multi-framework scoring | ✅ Backend (`POST /v1/score`, `workspace.framework`, polymorphic `item_scores`) and frontend both shipped. Custom framework dropdown on the create modal; ICE / MoSCoW / Value × Effort each render a dedicated polymorphic board with framework-aware inputs, metric legend, (i) tooltips, and intro line |
 | Auth | ✅ GitHub OAuth via NextAuth.js + HS256 JWT verification on the backend. Floating user badge (avatar + email + Sign out) on every page. `AUTH_DISABLED=1` bypass for self-host / local dev |
@@ -170,7 +170,7 @@ on the JWT's `email` claim.
 | Backend  | FastAPI, Python 3.12+, SQLAlchemy 2.0, Alembic             |
 | Database | PostgreSQL 16 (Dockerized, port `5433` to avoid conflicts) |
 | Monorepo | pnpm workspaces + Turborepo                                |
-| Testing  | pytest (124 tests, backend), Playwright (5 e2e scenarios)  |
+| Testing  | pytest (129 tests, backend), Playwright (5 e2e scenarios)  |
 | Deploy   | Cloudflare Pages (frontend) + Render (backend) + Neon (DB) |
 | CI       | GitHub Actions — web, api, e2e jobs all gated on PRs       |
 
@@ -199,7 +199,7 @@ on the JWT's `email` claim.
 - [x] Multi-user auth (NextAuth.js + JWT) — GitHub OAuth on the frontend, HS256 JWT verification on the backend with cross-user ownership checks on every endpoint. Floating user badge on every page (avatar + email + Sign out). `AUTH_DISABLED=1` bypass for self-host / local dev (mirrored on both sides).
 - [x] Item completion — nullable `completed_at` on `backlog_items` (migration 0006), checkbox column on every board, completed items strikethrough + sink to the bottom regardless of score. "Show completed" filter toggle (URL `?completed=show`) mixes them back in for retros. History log captures mark/unmark events automatically via the field-diff hook.
 - [~] CSV / Jira / Linear / Notion export — CSV (client-side, framework-aware columns), Notion (REST, token + database id), and Linear (GraphQL, personal API key + team id) all shipped. Per-target setup flow lives in the in-app Export menu; partial-success reporting (created / failed counts + per-row error) is shared across integrations. Jira integration still TODO.
-- [~] Collaborative scoring — Phase A done: `workspace_members` table, owner-vs-scorer role split, invite-by-email endpoint, in-app Members modal. Read / score / edit / complete are now member-gated; destructive ops (rename, delete workspace, manage members) stay owner-only. Phase B (per-user score storage) and Phase C (disagreement visualization on the board) remain.
+- [x] Collaborative scoring — workspace_members table + invite-by-email (Phase A), per-user `rice_scores` / `item_scores` rows with `(item_id, user_id, framework)` unique key (Phase B), and board surfaces the team aggregate (mean + variance + min/max spread + contributor chip) sourced from those per-user rows (Phase C). Each member's inline edits write only their own row; deletes only clear their own. Sort key on every board now uses the aggregate, not the caller's personal score.
 
 See [GitHub Projects](https://github.com/james-kanghj/frameboard/projects) for the live board.
 

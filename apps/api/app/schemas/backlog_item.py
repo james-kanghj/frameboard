@@ -74,6 +74,18 @@ class BacklogItemUpdate(BaseModel):
         return _normalise_tags(v) if v is not None else None
 
 
+class ScoreAggregate(BaseModel):
+    """Mean / min / max + variance + contributor count across every
+    member who has scored this item. Drives the Phase-C disagreement
+    visualization on the board."""
+
+    score: float
+    contributor_count: int
+    variance: float
+    min: float
+    max: float
+
+
 class BacklogItemRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -86,12 +98,16 @@ class BacklogItemRead(BaseModel):
     updated_at: datetime
     # Null = open, timestamp = shipped at that moment.
     completed_at: datetime | None = None
-    # RICE-specific score from the legacy `rice_scores` table. Populated
-    # for RICE workspaces; None for non-RICE workspaces (which use the
-    # polymorphic `score` field below). Kept as a separate field for
-    # backward compatibility with existing frontend code.
+    # The caller's own RICE score (their reach/impact/confidence/effort
+    # row). Null when the caller hasn't scored this item yet — another
+    # member may have, in which case `rice_aggregate` is populated.
     rice_score: RICEScoreRead | None = None
-    # Polymorphic score for non-RICE frameworks (ICE / MoSCoW /
-    # ValueEffort). Populated only by the board endpoint, where the
-    # workspace's framework is known. Defaults to None on other endpoints.
+    # Mean across every member's RICE row + variance + contributor
+    # count. Populated only by the board endpoint on RICE workspaces.
+    rice_aggregate: ScoreAggregate | None = None
+    # Polymorphic version of `rice_score` for ICE / MoSCoW /
+    # ValueEffort workspaces — the caller's own score.
     score: ScoreRead | None = None
+    # Polymorphic aggregate (mean + variance + count) for non-RICE
+    # workspaces.
+    score_aggregate: ScoreAggregate | None = None

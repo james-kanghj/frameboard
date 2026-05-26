@@ -14,6 +14,16 @@ export interface RICEScoreData {
   updatedAt: string;
 }
 
+// Aggregate across every workspace member who has scored an item.
+// Mirrors backend ScoreAggregate.
+export interface ScoreAggregate {
+  score: number;
+  contributorCount: number;
+  variance: number;
+  min: number;
+  max: number;
+}
+
 // Mirrors backend BacklogItemRead.
 export interface BacklogItem {
   id: string;
@@ -26,12 +36,16 @@ export interface BacklogItem {
   // Null = open / not yet shipped. Timestamp = when the item was
   // checked off.
   completedAt: string | null;
-  // RICE-specific score from the legacy `rice_scores` table. Populated
-  // for RICE workspaces.
+  // The calling user's own RICE score row, on RICE workspaces.
   riceScore: RICEScoreData | null;
-  // Polymorphic score for non-RICE frameworks. Populated by the board
-  // endpoint when the workspace uses ICE / MoSCoW / ValueEffort.
+  // Mean + variance + contributor count across every member of the
+  // workspace who has scored this item. Drives the score column +
+  // disagreement indicator on the RICE board.
+  riceAggregate?: ScoreAggregate | null;
+  // Polymorphic equivalent of `riceScore` for non-RICE workspaces.
   score?: ScoreData | null;
+  // Polymorphic equivalent of `riceAggregate`.
+  scoreAggregate?: ScoreAggregate | null;
 }
 
 // Mirrors backend WorkspaceRead.

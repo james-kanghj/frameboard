@@ -36,7 +36,7 @@ def list_items(db: Session, *, workspace_id: UUID) -> list[BacklogItem]:
     stmt = (
         select(BacklogItem)
         .where(BacklogItem.workspace_id == workspace_id)
-        .options(selectinload(BacklogItem.rice_score))
+        .options(selectinload(BacklogItem.rice_scores))
         .order_by(BacklogItem.created_at.desc())
     )
     return list(db.execute(stmt).scalars().all())
@@ -46,7 +46,7 @@ def get_item(db: Session, item_id: UUID) -> BacklogItem | None:
     stmt = (
         select(BacklogItem)
         .where(BacklogItem.id == item_id)
-        .options(selectinload(BacklogItem.rice_score))
+        .options(selectinload(BacklogItem.rice_scores))
     )
     return db.execute(stmt).scalar_one_or_none()
 

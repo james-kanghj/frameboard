@@ -18,7 +18,12 @@ import {
   type SetStateAction,
 } from "react";
 
-import type { BacklogItem, Framework, ScoreData } from "@frameboard/shared";
+import type {
+  BacklogItem,
+  Framework,
+  ScoreAggregate,
+  ScoreData,
+} from "@frameboard/shared";
 
 import {
   createItem,
@@ -108,16 +113,18 @@ export function PolymorphicBoard({
     router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
   }, [searchParams, router, pathname]);
 
-  // Sort: completed items sink to the bottom first; within each group,
-  // scored items by score DESC, unscored by created_at ASC. Matches the
-  // backend's list_board ordering for non-RICE frameworks.
+  // Sort: completed items sink to the bottom first; within each group
+  // we rank by aggregate score DESC (team consensus), not the caller's
+  // personal score. Unscored items fall back to created_at ASC.
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => {
       const aDone = a.completedAt ? 1 : 0;
       const bDone = b.completedAt ? 1 : 0;
       if (aDone !== bDone) return aDone - bDone;
-      const aScore = a.score?.score ?? null;
-      const bScore = b.score?.score ?? null;
+      const aScore =
+        a.scoreAggregate?.score ?? a.score?.score ?? null;
+      const bScore =
+        b.scoreAggregate?.score ?? b.score?.score ?? null;
       if (aScore !== null && bScore !== null) {
         if (bScore !== aScore) return bScore - aScore;
         return a.createdAt.localeCompare(b.createdAt);
@@ -653,7 +660,12 @@ function BoardRow({
         </td>
       ))}
       <td className="bg-slate-50/70 px-3 py-3 text-right font-semibold text-slate-900">
-        {score ? score.score.toFixed(2) : (
+        {item.scoreAggregate || score ? (
+          <PolyScoreDisplay
+            aggregate={item.scoreAggregate ?? null}
+            mine={score?.score ?? null}
+          />
+        ) : (
           <button
             type="button"
             onClick={() => onEditItem(item)}
@@ -682,6 +694,52 @@ function BoardRow({
         </button>
       </td>
     </tr>
+  );
+}
+
+// Mirrors RICEBoard's ScoreDisplay: shows the team aggregate as the
+// primary number plus a contributor-count chip; min–max spread + my
+// own score appear below when there's actual disagreement to surface.
+function PolyScoreDisplay({
+  aggregate,
+  mine,
+}: {
+  aggregate: ScoreAggregate | null;
+  mine: number | null;
+}) {
+  const value = aggregate?.score ?? mine ?? 0;
+  const count = aggregate?.contributorCount ?? (mine != null ? 1 : 0);
+  const hasDisagreement =
+    aggregate != null &&
+    aggregate.contributorCount > 1 &&
+    aggregate.max !== aggregate.min;
+  return (
+    <span className="inline-flex flex-col items-end">
+      <span className="inline-flex items-baseline gap-1">
+        <span>{value.toFixed(2)}</span>
+        {count > 1 && (
+          <span
+            className="rounded-full bg-slate-200 px-1.5 text-[10px] font-medium tabular-nums text-slate-600"
+            title={`${count} members scored`}
+          >
+            {count}
+          </span>
+        )}
+      </span>
+      {hasDisagreement && (
+        <span
+          className="text-[10px] font-normal text-slate-500"
+          title="Range across members (min – max)"
+        >
+          {aggregate.min.toFixed(0)}–{aggregate.max.toFixed(0)}
+        </span>
+      )}
+      {mine != null && aggregate != null && aggregate.contributorCount > 1 && (
+        <span className="text-[10px] font-normal text-slate-400">
+          mine: {mine.toFixed(2)}
+        </span>
+      )}
+    </span>
   );
 }
 
