@@ -4,7 +4,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import exports, health, items, prioritization, users, workspaces
+from app.api import (
+    exports,
+    health,
+    items,
+    members,
+    prioritization,
+    users,
+    workspaces,
+)
 from app.core.config import settings
 
 
@@ -36,6 +44,7 @@ app.include_router(workspaces.router, prefix="/v1", tags=["workspaces"])
 app.include_router(items.router, prefix="/v1", tags=["items"])
 app.include_router(users.router, prefix="/v1", tags=["users"])
 app.include_router(exports.router, prefix="/v1", tags=["exports"])
+app.include_router(members.router, prefix="/v1", tags=["members"])
 
 # Test-only routes — gated behind an env var so they can never be mounted
 # accidentally in production. The e2e suite sets FRAMEBOARD_TEST_MODE=1

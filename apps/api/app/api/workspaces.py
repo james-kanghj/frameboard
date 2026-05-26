@@ -5,7 +5,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import CurrentUser, require_workspace_owner
+from app.api.deps import (
+    CurrentUser,
+    require_workspace_member,
+    require_workspace_owner,
+)
 from app.crud import backlog_item as item_crud
 from app.crud import workspace as workspace_crud
 from app.db.session import get_db
@@ -36,13 +40,14 @@ def list_workspaces(
     current_user: CurrentUser,
     db: Session = Depends(get_db),
 ) -> list[WorkspaceRead]:
-    return workspace_crud.list_workspaces(db, owner_id=current_user.id)
+    return workspace_crud.list_workspaces(db, user_id=current_user.id)
 
 
 @router.get("/{workspace_id}", response_model=WorkspaceRead)
 def get_workspace(
-    workspace: Workspace = Depends(require_workspace_owner),
+    workspace: Workspace = Depends(require_workspace_member),
 ) -> WorkspaceRead:
+    # Any member can read workspace metadata.
     return workspace
 
 
@@ -76,9 +81,10 @@ def delete_workspace(
 )
 def create_item(
     payload: BacklogItemCreate,
-    workspace: Workspace = Depends(require_workspace_owner),
+    workspace: Workspace = Depends(require_workspace_member),
     db: Session = Depends(get_db),
 ) -> BacklogItemRead:
+    # Any member can add items — shared workspace = shared backlog.
     return item_crud.create_item(
         db,
         workspace_id=workspace.id,
@@ -90,7 +96,7 @@ def create_item(
 
 @router.get("/{workspace_id}/items", response_model=list[BacklogItemRead])
 def list_items(
-    workspace: Workspace = Depends(require_workspace_owner),
+    workspace: Workspace = Depends(require_workspace_member),
     db: Session = Depends(get_db),
 ) -> list[BacklogItemRead]:
     return item_crud.list_items(db, workspace_id=workspace.id)

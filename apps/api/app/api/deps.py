@@ -114,3 +114,35 @@ def require_workspace_owner(
             status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found"
         )
     return workspace
+
+
+def require_workspace_member(
+    workspace_id: UUID,
+    current_user: CurrentUser,
+    db: Annotated[Session, Depends(get_db)],
+):
+    """Looser variant: any member (owner OR scorer) passes. Used by
+    read/score/edit paths so invited collaborators can interact with the
+    workspace; destructive operations (delete workspace, manage members)
+    still go through `require_workspace_owner`."""
+    # Local import dodges a circular reference between
+    # app.api.deps and app.crud.workspace_member.
+    from app.crud import workspace_member as member_crud
+
+    workspace = workspace_crud.get_workspace(db, workspace_id)
+    if workspace is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found"
+        )
+    # Owner-id short-circuit so the common single-user path doesn't
+    # incur an extra SELECT.
+    if workspace.owner_id == current_user.id:
+        return workspace
+    membership = member_crud.get_membership(
+        db, workspace_id=workspace_id, user_id=current_user.id
+    )
+    if membership is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found"
+        )
+    return workspace

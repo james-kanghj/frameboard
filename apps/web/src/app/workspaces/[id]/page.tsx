@@ -51,12 +51,14 @@ export default async function WorkspaceBoardPage({ params }: PageProps) {
         <RICEBoard
           workspaceId={id}
           workspaceName={workspace.name}
+          workspaceOwnerId={workspace.ownerId}
           initialItems={items}
         />
       ) : (
         <PolymorphicBoard
           workspaceId={id}
           workspaceName={workspace.name}
+          workspaceOwnerId={workspace.ownerId}
           framework={workspace.framework}
           initialItems={items}
         />

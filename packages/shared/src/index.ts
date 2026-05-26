@@ -107,6 +107,25 @@ export interface ExportResult {
   failures: ExportFailure[];
 }
 
+// Mirrors backend MemberRead. Two roles for now: `owner` has full
+// destructive perms, `scorer` can read/score/edit/complete items but
+// can't change workspace metadata or manage members.
+export type MemberRole = "owner" | "scorer";
+
+export interface WorkspaceMember {
+  id: string;
+  userId: string;
+  email: string;
+  displayName: string;
+  role: MemberRole;
+  createdAt: string;
+}
+
+export interface InviteMemberInput {
+  email: string;
+  role?: MemberRole;
+}
+
 export interface CreateItemInput {
   title: string;
   description?: string | null;

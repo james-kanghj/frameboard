@@ -4,6 +4,7 @@ from app.models.item_score import ItemScore
 from app.models.rice_score import RICEScore
 from app.models.user import User
 from app.models.workspace import Workspace
+from app.models.workspace_member import WorkspaceMember
 
 __all__ = [
     "BacklogItem",
@@ -12,4 +13,5 @@ __all__ = [
     "RICEScore",
     "User",
     "Workspace",
+    "WorkspaceMember",
 ]

@@ -30,6 +30,16 @@ def create_workspace(
 ) -> Workspace:
     workspace = Workspace(name=name, owner_id=owner_id, framework=framework)
     db.add(workspace)
+    db.flush()
+    # Mirror the owner into the workspace_members table so the
+    # membership-aware reads see them immediately. Imported lazily to
+    # avoid a circular import with workspace_member.py (which itself
+    # imports from this module).
+    from app.crud import workspace_member as member_crud
+
+    member_crud.ensure_owner_member(
+        db, workspace_id=workspace.id, owner_user_id=owner_id
+    )
     db.commit()
     db.refresh(workspace)
     return workspace
@@ -56,13 +66,16 @@ def update_workspace(
     return workspace
 
 
-def list_workspaces(db: Session, *, owner_id: UUID) -> list[Workspace]:
-    stmt = (
-        select(Workspace)
-        .where(Workspace.owner_id == owner_id)
-        .order_by(Workspace.created_at.desc())
-    )
-    return list(db.execute(stmt).scalars().all())
+def list_workspaces(db: Session, *, user_id: UUID) -> list[Workspace]:
+    """Workspaces the user has membership in — owner OR scorer. The
+    callsite in `app/api/workspaces.py` passes `current_user.id`, so
+    invited scorers see the shared workspace in their listing alongside
+    workspaces they own."""
+    # Local import to dodge the circular reference with
+    # workspace_member.py.
+    from app.crud import workspace_member as member_crud
+
+    return member_crud.list_workspaces_for_user(db, user_id=user_id)
 
 
 def get_workspace(db: Session, workspace_id: UUID) -> Workspace | None:

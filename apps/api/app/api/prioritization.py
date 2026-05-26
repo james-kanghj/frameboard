@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from app.api.deps import CurrentUser, require_workspace_owner
+from app.api.deps import CurrentUser, require_workspace_member
 from app.crud import backlog_item as item_crud
 from app.crud import item_score as item_score_crud
 from app.crud import rice_score as rice_crud
@@ -31,11 +31,24 @@ router = APIRouter()
 def _load_owned_item(
     db: Session, *, item_id: UUID, current_user_id: UUID
 ) -> BacklogItem:
-    """Same pattern as items._load_owned_item — duplicated to avoid a
-    cross-router import. Resolves the item and asserts the current user
-    owns its parent workspace."""
+    """Mirror of items._load_owned_item — accepts the workspace owner
+    OR any invited member. Duplicated rather than imported across
+    routers to keep the inter-router dependency graph flat."""
     item = item_crud.get_item(db, item_id)
-    if item is None or item.workspace.owner_id != current_user_id:
+    if item is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
+        )
+    if item.workspace.owner_id == current_user_id:
+        return item
+    from app.crud import workspace_member as member_crud
+
+    membership = member_crud.get_membership(
+        db,
+        workspace_id=item.workspace_id,
+        user_id=current_user_id,
+    )
+    if membership is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
         )
@@ -151,7 +164,7 @@ def score_ice(payload: ICEScoreRequest) -> PrioritizationResult:
 
 @router.get("/workspaces/{workspace_id}/board", response_model=list[BacklogItemRead])
 def get_board(
-    workspace: Workspace = Depends(require_workspace_owner),
+    workspace: Workspace = Depends(require_workspace_member),
     db: Session = Depends(get_db),
 ) -> list[BacklogItemRead]:
     """Board view: workspace items ordered by score DESC for the workspace's

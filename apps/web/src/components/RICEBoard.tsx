@@ -19,6 +19,7 @@ import type { BacklogItem, RICEImpact } from "@frameboard/shared";
 import { createItem, deleteItem, scoreRICE, updateItem } from "@/lib/api";
 
 import { ExportMenu } from "@/components/ExportMenu";
+import { MembersMenu } from "@/components/MembersMenu";
 
 import { EditItemModal } from "@/components/EditItemModal";
 import { ImpactSelect } from "@/components/ImpactSelect";
@@ -26,6 +27,7 @@ import { ImpactSelect } from "@/components/ImpactSelect";
 interface Props {
   workspaceId: string;
   workspaceName: string;
+  workspaceOwnerId: string;
   initialItems: BacklogItem[];
 }
 
@@ -67,7 +69,12 @@ const SCORE_BUCKETS: ReadonlyArray<{
   { value: "low", label: "Low (<200)", test: (s) => s < 200 },
 ];
 
-export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
+export function RICEBoard({
+  workspaceId,
+  workspaceName,
+  workspaceOwnerId,
+  initialItems,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -218,6 +225,10 @@ export function RICEBoard({ workspaceId, workspaceName, initialItems }: Props) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <MembersMenu
+            workspaceId={workspaceId}
+            workspaceOwnerId={workspaceOwnerId}
+          />
           <ExportMenu
             workspaceId={workspaceId}
             workspaceName={workspaceName}

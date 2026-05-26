@@ -6,6 +6,7 @@ import type {
   CreateWorkspaceInput,
   ExportResult,
   Framework,
+  InviteMemberInput,
   ItemHistoryEntry,
   ScoreData,
   ScoreRequestInput,
@@ -16,6 +17,7 @@ import type {
   UserMe,
   UserMeUpdateInput,
   Workspace,
+  WorkspaceMember,
 } from "@frameboard/shared";
 
 const API_BASE_URL =
@@ -309,5 +311,35 @@ export function exportToLinear(workspaceId: string): Promise<ExportResult> {
   return request<ExportResult>(
     `/v1/workspaces/${workspaceId}/export/linear`,
     { method: "POST" },
+  );
+}
+
+// ---------- Workspace members ----------
+
+export function listMembers(
+  workspaceId: string,
+): Promise<WorkspaceMember[]> {
+  return request<WorkspaceMember[]>(
+    `/v1/workspaces/${workspaceId}/members`,
+  );
+}
+
+export function inviteMember(
+  workspaceId: string,
+  input: InviteMemberInput,
+): Promise<WorkspaceMember> {
+  return request<WorkspaceMember>(
+    `/v1/workspaces/${workspaceId}/members`,
+    { method: "POST", body: input },
+  );
+}
+
+export function removeMember(
+  workspaceId: string,
+  userId: string,
+): Promise<void> {
+  return request<void>(
+    `/v1/workspaces/${workspaceId}/members/${userId}`,
+    { method: "DELETE" },
   );
 }

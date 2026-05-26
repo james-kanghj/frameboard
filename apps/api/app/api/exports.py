@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import CurrentUser, require_workspace_owner
+from app.api.deps import CurrentUser, require_workspace_member
 from app.crud import backlog_item as item_crud
 from app.db.session import get_db
 from app.models.workspace import Workspace
@@ -37,7 +37,7 @@ class ExportResult(BaseModel):
 )
 def export_to_notion(
     current_user: CurrentUser,
-    workspace: Workspace = Depends(require_workspace_owner),
+    workspace: Workspace = Depends(require_workspace_member),
     db: Session = Depends(get_db),
 ) -> ExportResult:
     """Push every item in the workspace into the caller's Notion
@@ -81,7 +81,7 @@ def export_to_notion(
 )
 def export_to_linear(
     current_user: CurrentUser,
-    workspace: Workspace = Depends(require_workspace_owner),
+    workspace: Workspace = Depends(require_workspace_member),
     db: Session = Depends(get_db),
 ) -> ExportResult:
     """Push every workspace item into Linear as a new issue under the

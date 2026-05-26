@@ -29,6 +29,7 @@ import {
 } from "@/lib/api";
 
 import { ExportMenu } from "@/components/ExportMenu";
+import { MembersMenu } from "@/components/MembersMenu";
 import {
   FRAMEWORK_CONFIGS,
   type FrameworkConfig,
@@ -39,6 +40,7 @@ import { InfoTooltip } from "@/components/InfoTooltip";
 interface Props {
   workspaceId: string;
   workspaceName: string;
+  workspaceOwnerId: string;
   framework: Framework;
   initialItems: BacklogItem[];
 }
@@ -54,6 +56,7 @@ type FilterStatus = "all" | "scored" | "unscored";
 export function PolymorphicBoard({
   workspaceId,
   workspaceName,
+  workspaceOwnerId,
   framework,
   initialItems,
 }: Props) {
@@ -194,6 +197,10 @@ export function PolymorphicBoard({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <MembersMenu
+            workspaceId={workspaceId}
+            workspaceOwnerId={workspaceOwnerId}
+          />
           <ExportMenu
             workspaceId={workspaceId}
             workspaceName={workspaceName}

@@ -21,11 +21,27 @@ router = APIRouter(prefix="/items")
 def _load_owned_item(
     db: Session, *, item_id: UUID, current_user_id: UUID
 ) -> BacklogItem:
-    """Loads an item and asserts the current user owns the parent
-    workspace. 404 (rather than 403) when the item belongs to another
-    user — same leak-prevention pattern used by require_workspace_owner."""
+    """Loads an item and asserts the current user is a member of its
+    parent workspace. Owner-id short-circuits the membership lookup so
+    the single-owner happy path stays one query. 404 (rather than 403)
+    when the item doesn't exist or isn't accessible to this user —
+    same leak-prevention pattern used by require_workspace_owner."""
     item = item_crud.get_item(db, item_id)
-    if item is None or item.workspace.owner_id != current_user_id:
+    if item is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
+        )
+    if item.workspace.owner_id == current_user_id:
+        return item
+    # Membership fallback for invited collaborators.
+    from app.crud import workspace_member as member_crud
+
+    membership = member_crud.get_membership(
+        db,
+        workspace_id=item.workspace_id,
+        user_id=current_user_id,
+    )
+    if membership is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Item not found"
         )
